@@ -382,6 +382,13 @@ button{font-family:inherit}
 .spark-x{display:flex;gap:7px;margin-top:8px}
 .spark-x span{flex:1;text-align:center;font-size:10px;color:var(--muted)}
 
+/* person chart */
+.person-row{margin-bottom:14px}
+.person-row:last-child{margin-bottom:0}
+.person-info{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.person-name{flex:1;font-size:12.5px;color:var(--text-2);font-weight:500}
+.person-stats{font-size:11.5px;color:var(--muted);font-weight:600}
+
 /* ══════════ REPORT ══════════ */
 .heat{display:grid;gap:4px}
 .heat-corner,.heat-colh{font-size:10.5px;color:var(--muted);font-weight:600;display:flex;align-items:center}
