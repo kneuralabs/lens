@@ -156,7 +156,7 @@ select:focus{border-color:var(--kn-blue)}
 .section-body{overflow:hidden;transition:max-height .3s ease}
 
 /* TASK GRID */
-.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(260px,30vw,400px),1fr));
+.task-grid{display:grid;grid-template-columns:repeat(4,1fr);
   gap:clamp(6px,1vw,10px);padding:6px 0 14px}
 
 /* TASK CARD */
@@ -651,7 +651,7 @@ select:focus{border-color:var(--kn-blue)}
   select{ font-size:10px; flex:1; min-width:80px; }
   .btn-reset{ margin-left:0; }
 
-  .task-grid{ grid-template-columns:1fr; gap:6px; }
+  .task-grid{ grid-template-columns:1fr 1fr; gap:6px; }
 
   .cust-section{ padding:14px; }
   .cust-section h3{ font-size:11px; }
