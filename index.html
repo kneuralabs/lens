@@ -733,6 +733,7 @@ select:focus{border-color:var(--kn-blue)}
 /* ── TASKS LAYOUT + SIDEBAR ── */
 .tasks-layout{display:flex;align-items:flex-start;gap:0;position:relative}
 .tasks-layout .main{flex:1;min-width:0}
+.tasks-layout-inner{display:flex;flex:1;min-width:0;align-items:flex-start}
 
 .sidebar{
   width:280px;flex-shrink:0;
@@ -830,77 +831,70 @@ select:focus{border-color:var(--kn-blue)}
    COMMAND CENTER LAYOUT
 ═══════════════════════════════════════════ */
 
-/* App shell: nav-rail + content area side-by-side */
-.app-shell{display:flex;min-height:100vh}
+/* App shell: top-bar + content area stacked */
+.app-shell{display:flex;flex-direction:column;min-height:100vh}
 
-/* Left navigation rail */
+/* Top navigation bar */
 .nav-rail{
-  width:220px;flex-shrink:0;
+  width:100%;
   background:var(--kn-navy);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
-  position:sticky;top:0;height:100vh;overflow-y:auto;
-  scrollbar-width:none;z-index:100;
-  transition:width .25s ease,transform .25s ease;
+  border-bottom:1px solid rgba(28,92,170,.4);
+  display:flex;align-items:center;
+  position:sticky;top:0;z-index:100;
+  padding:0 clamp(16px,4vw,40px);
+  height:56px;flex-shrink:0;
 }
-.nav-rail::-webkit-scrollbar{display:none}
-[data-theme="light"] .nav-rail{background:var(--kn-navy);border-right-color:rgba(28,92,170,.2)}
+[data-theme="light"] .nav-rail{background:var(--kn-navy)}
 
-/* Logo area in rail */
+/* Logo area */
 .rail-logo{
   display:flex;align-items:center;gap:10px;
-  padding:18px 16px 14px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  flex-shrink:0;
+  padding:0 24px 0 0;
+  border-right:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;height:100%;
 }
 .rail-logo-img{height:28px;width:28px;object-fit:contain}
 .rail-brand{display:flex;flex-direction:column;gap:1px}
-.rail-brand-name{font-size:16px;font-weight:800;color:#F7F8FA;letter-spacing:.02em;line-height:1}
+.rail-brand-name{font-size:15px;font-weight:800;color:#F7F8FA;letter-spacing:.02em;line-height:1}
 .rail-brand-sub{font-size:9px;color:var(--kn-silver);text-transform:uppercase;letter-spacing:.1em}
 
-/* Nav items */
-.nav-items{display:flex;flex-direction:column;gap:2px;padding:12px 10px;flex:1}
+/* Nav items — horizontal */
+.nav-items{display:flex;flex-direction:row;gap:2px;padding:0 16px;flex:1;align-items:center;height:100%;overflow-x:auto;scrollbar-width:none}
+.nav-items::-webkit-scrollbar{display:none}
 .nav-item{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 12px;border-radius:6px;
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;border-radius:6px;
   font-size:12px;font-weight:500;color:rgba(247,248,250,.65);
   cursor:pointer;border:1px solid transparent;
   transition:all .15s ease;letter-spacing:.02em;
-  user-select:none;white-space:nowrap;
+  user-select:none;white-space:nowrap;height:36px;
 }
 .nav-item:hover{color:#F7F8FA;background:rgba(74,139,200,.15)}
 .nav-item.active{
   color:#F7F8FA;background:rgba(28,92,170,.35);
   border-color:rgba(74,139,200,.4);
 }
-.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.nav-icon{font-size:13px;flex-shrink:0}
 .nav-label{flex:1}
 .nav-badge{
   font-size:9px;font-weight:700;background:var(--kn-red);
   color:#fff;border-radius:10px;padding:1px 6px;letter-spacing:.02em;
 }
 
-/* Bottom of rail */
-.rail-bottom{padding:12px 10px;border-top:1px solid rgba(255,255,255,.08)}
+/* Right side of top bar */
+.rail-bottom{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
 .rail-upload-btn{
-  width:100%;display:flex;align-items:center;gap:8px;
-  padding:9px 12px;border-radius:6px;
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:6px;
   background:rgba(28,92,170,.25);border:1px solid rgba(74,139,200,.3);
   color:var(--kn-sky);font-size:11px;font-weight:600;cursor:pointer;
   transition:all .15s ease;letter-spacing:.04em;
-  text-transform:uppercase;
+  text-transform:uppercase;white-space:nowrap;
 }
 .rail-upload-btn:hover{background:rgba(28,92,170,.45);border-color:var(--kn-sky)}
 
-/* Mobile hamburger */
-.rail-toggle-btn{
-  display:none;position:fixed;top:12px;left:12px;z-index:200;
-  width:36px;height:36px;border-radius:8px;
-  background:var(--kn-navy);border:1px solid var(--border);
-  color:#F7F8FA;font-size:16px;cursor:pointer;
-  align-items:center;justify-content:center;
-  box-shadow:0 2px 8px rgba(13,46,90,.4);
-}
+/* Mobile hamburger — unused but kept */
+.rail-toggle-btn{display:none}
 
 /* Content area */
 .page-area{flex:1;min-width:0;display:flex;flex-direction:column;overflow-x:hidden}
@@ -909,7 +903,23 @@ select:focus{border-color:var(--kn-blue)}
 .app-page{display:none}
 .app-page.active{display:block}
 
-/* ─── OVERVIEW PAGE ─── */
+/* ─── OVERVIEW SIDEBAR ─── */
+.overview-sidebar{
+  width:280px;flex-shrink:0;
+  background:var(--surface);border-right:1px solid var(--border);
+  min-height:calc(100vh - 56px);
+  position:sticky;top:56px;
+  max-height:calc(100vh - 56px);overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+  display:flex;flex-direction:column;gap:0;
+}
+.ov-sb-section{padding:14px 14px 10px;border-bottom:1px solid var(--border)}
+.ov-sb-title{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--kn-blue);margin-bottom:10px}
+[data-theme="light"] .ov-sb-title{color:var(--kn-blue)}
+@media(max-width:1000px){.overview-sidebar{width:240px}}
+@media(max-width:800px){.overview-sidebar{display:none}}
+
+/* ─── OVERVIEW PAGE (standalone shell, kept for renderOverview refs) ─── */
 .ov-shell{
   max-width:1200px;margin:0 auto;
   padding:clamp(20px,4vw,40px) clamp(16px,4vw,40px) 60px;
@@ -1083,28 +1093,18 @@ select:focus{border-color:var(--kn-blue)}
 .stepper-footer{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:10px}
 
 /* ─── RESPONSIVE: mobile nav ─── */
-@media(max-width:900px){
-  .app-shell{flex-direction:column}
-  .nav-rail{
-    width:100%;height:auto;position:static;
-    flex-direction:row;align-items:center;
-    padding:0 12px;border-right:none;border-bottom:1px solid var(--border);
-  }
-  .rail-logo{border-bottom:none;padding:10px 8px 10px 0;flex-shrink:0}
+@media(max-width:680px){
+  .nav-rail{padding:0 12px;height:48px}
   .rail-brand-sub{display:none}
-  .nav-items{flex-direction:row;padding:8px 0;gap:0;overflow-x:auto;scrollbar-width:none}
-  .nav-items::-webkit-scrollbar{display:none}
-  .nav-item{padding:8px 12px;font-size:11px;white-space:nowrap}
+  .nav-item{padding:5px 10px;font-size:11px}
   .nav-icon{display:none}
-  .rail-bottom{display:none}
-  .ov-maturity-card{flex-direction:column;align-items:flex-start}
   .rp-grid{grid-template-columns:1fr}
   .rp-heat-fw-row{grid-template-columns:1fr}
 }
 @media(max-width:479px){
   .nav-rail{padding:0 8px}
-  .nav-item{padding:7px 9px;font-size:10px}
-  .rail-brand-name{font-size:14px}
+  .nav-item{padding:5px 8px;font-size:10px}
+  .rail-brand-name{font-size:13px}
 }
 </style>
 </head>
@@ -1140,7 +1140,7 @@ select:focus{border-color:var(--kn-blue)}
 <!-- APP SHELL -->
 <div class="app-shell">
 
-<!-- LEFT NAV RAIL -->
+<!-- TOP NAV BAR -->
 <nav class="nav-rail" id="nav-rail">
   <div class="rail-logo">
     <img src="https://lens.kneuralabs.com/LOGO.png" alt="" class="rail-logo-img" onerror="this.style.display='none'">
@@ -1150,15 +1150,13 @@ select:focus{border-color:var(--kn-blue)}
     </div>
   </div>
   <div class="nav-items">
-    <div class="nav-item active" data-page="overview"><span class="nav-icon">◎</span><span class="nav-label">Overview</span></div>
+    <div class="nav-item active" data-page="profile"><span class="nav-icon">🏢</span><span class="nav-label">Profile</span></div>
     <div class="nav-item" data-page="tasks"><span class="nav-icon">☑</span><span class="nav-label">Tasks</span><span class="nav-badge" id="nav-crit-badge" style="display:none"></span></div>
     <div class="nav-item" data-page="report"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></div>
-    <div class="nav-item" data-page="profile"><span class="nav-icon">🏢</span><span class="nav-label">Profile</span></div>
   </div>
   <div class="rail-bottom">
+    <span class="upload-badge" id="upload-badge" style="display:none;font-size:10px;color:var(--medium)">✓ Tasks Loaded</span>
     <button class="rail-upload-btn" id="btn-open-upload"><span>⬆</span> Upload Tasks</button>
-    <div style="height:8px"></div>
-    <span class="upload-badge" id="upload-badge" style="display:none;font-size:9px;color:var(--medium);padding:4px 0">✓ Tasks Loaded</span>
   </div>
 </nav>
 
@@ -1166,84 +1164,71 @@ select:focus{border-color:var(--kn-blue)}
 <div class="page-area">
 
 <!-- ── OVERVIEW PAGE ── -->
-<div class="app-page active" id="page-overview">
-<div class="ov-shell">
-  <div class="ov-topbar">
-    <div class="ov-title-block">
-      <div class="ov-label">AI Governance Maturity</div>
-      <div class="ov-heading">Where you stand</div>
-    </div>
-    <button class="ov-btn-new" onclick="navigateTo('tasks')">☑ View All Tasks →</button>
-  </div>
-
-  <!-- Row 1: maturity ring + stats + momentum -->
-  <div class="ov-row">
-    <!-- Maturity ring card -->
-    <div class="ov-card ov-maturity-card">
+<!-- ── TASKS PAGE (with Overview sidebar) ── -->
+<div class="app-page active" id="page-tasks">
+<!-- Overview sidebar -->
+<aside class="overview-sidebar" id="overview-sidebar">
+  <div class="ov-sb-section">
+    <div class="ov-sb-title">Overview</div>
+    <!-- Maturity ring -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
       <div class="ov-ring-wrap">
-        <svg class="ov-ring" viewBox="0 0 120 120">
+        <svg class="ov-ring" style="width:80px;height:80px" viewBox="0 0 120 120">
           <circle class="ov-ring-track" cx="60" cy="60" r="50"/>
           <circle class="ov-ring-fill" id="ov-ring-fill" cx="60" cy="60" r="50"/>
         </svg>
         <div class="ov-ring-lbl">
-          <span class="ov-ring-pct" id="ov-pct">0%</span>
-          <span class="ov-ring-sub">overall</span>
+          <span class="ov-ring-pct" id="ov-pct" style="font-size:16px">0%</span>
+          <span class="ov-ring-sub">done</span>
         </div>
       </div>
-      <div class="ov-maturity-info">
-        <div class="ov-card-label">Maturity Level</div>
-        <div class="ov-level-name" id="ov-level-name">L1 · Assess</div>
-        <div class="ov-level-track"><div class="ov-level-fill" id="ov-level-fill"></div></div>
-        <div class="ov-level-trend" id="ov-level-trend">Computing…</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <div style="font-size:11px;font-weight:700;color:var(--text)" id="ov-level-name">L1 · Assess</div>
+        <div class="ov-level-track" style="width:110px"><div class="ov-level-fill" id="ov-level-fill"></div></div>
+        <div style="font-size:10px;color:var(--medium)" id="ov-level-trend">Computing…</div>
       </div>
     </div>
-
-    <!-- Stat tiles -->
-    <div class="ov-stats-col">
-      <div class="ov-stat-tile">
-        <div class="ov-stat-n" id="ov-total">0</div>
-        <div class="ov-stat-k">tasks total</div>
+    <!-- Stats row -->
+    <div style="display:flex;gap:8px">
+      <div class="ov-stat-tile" style="padding:8px 10px">
+        <div class="ov-stat-n" id="ov-total" style="font-size:20px">0</div>
+        <div class="ov-stat-k">total</div>
       </div>
-      <div class="ov-stat-tile">
-        <div class="ov-stat-n ov-red" id="ov-critical">0</div>
+      <div class="ov-stat-tile" style="padding:8px 10px">
+        <div class="ov-stat-n ov-red" id="ov-critical" style="font-size:20px">0</div>
         <div class="ov-stat-k">critical open</div>
       </div>
     </div>
-
-    <!-- Momentum chart -->
-    <div class="ov-card ov-momentum-card">
-      <div class="ov-momentum-head">
-        <div class="ov-card-label" style="margin:0">Completion momentum · last 8 weeks</div>
-        <div class="ov-momentum-trend" id="ov-momentum-trend">▲ building</div>
-      </div>
-      <div class="ov-bars" id="ov-bars">
-        <div class="ov-bar" style="height:20%"></div>
-        <div class="ov-bar" style="height:28%"></div>
-        <div class="ov-bar" style="height:35%"></div>
-        <div class="ov-bar" style="height:42%"></div>
-        <div class="ov-bar" style="height:50%"></div>
-        <div class="ov-bar" style="height:60%"></div>
-        <div class="ov-bar" style="height:74%"></div>
-        <div class="ov-bar active" style="height:90%"></div>
-      </div>
+  </div>
+  <!-- Momentum chart -->
+  <div class="ov-sb-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="ov-sb-title" style="margin:0">Momentum</div>
+      <div style="font-size:10px;color:var(--medium)" id="ov-momentum-trend">▲ building</div>
+    </div>
+    <div class="ov-bars" id="ov-bars" style="height:44px">
+      <div class="ov-bar" style="height:20%"></div>
+      <div class="ov-bar" style="height:28%"></div>
+      <div class="ov-bar" style="height:35%"></div>
+      <div class="ov-bar" style="height:42%"></div>
+      <div class="ov-bar" style="height:50%"></div>
+      <div class="ov-bar" style="height:60%"></div>
+      <div class="ov-bar" style="height:74%"></div>
+      <div class="ov-bar active" style="height:90%"></div>
     </div>
   </div>
-
-  <!-- Row 2: next best actions -->
-  <div class="ov-card ov-nba-card" style="flex:unset">
-    <div class="ov-nba-head">
-      <div class="ov-card-label" style="margin:0">Next best actions — top incomplete tasks</div>
-      <div style="font-size:10px;color:var(--muted)" id="ov-nba-count"></div>
+  <!-- Next best actions -->
+  <div class="ov-sb-section" style="flex:1;border-bottom:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="ov-sb-title" style="margin:0">Next Actions</div>
+      <div style="font-size:9px;color:var(--muted)" id="ov-nba-count"></div>
     </div>
     <div class="ov-nba-list" id="ov-nba-list">
-      <div style="color:var(--muted);font-size:12px;padding:12px 0">Loading tasks…</div>
+      <div style="color:var(--muted);font-size:11px;padding:8px 0">Loading…</div>
     </div>
   </div>
-</div>
-</div>
-
-<!-- ── TASKS PAGE ── -->
-<div class="app-page" id="page-tasks">
+</aside>
+<div class="tasks-layout-inner">
 <header class="hdr">
   <div class="hdr-inner">
     <img src="https://lens.kneuralabs.com/LOGO.png" alt="" class="logo" onerror="this.style.display='none'">
@@ -1345,6 +1330,7 @@ select:focus{border-color:var(--kn-blue)}
     </div>
   </aside>
 </div>
+</div><!-- /tasks-layout-inner -->
 </div>
 
 <!-- ── EXEC REPORT PAGE ── -->
@@ -1854,7 +1840,7 @@ function navigateTo(pageId){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===pageId));
   document.querySelectorAll('.app-page').forEach(x=>x.classList.toggle('active',x.id==='page-'+pageId));
   try{localStorage.setItem('kn_page',pageId)}catch(e){}
-  if(pageId==='overview')renderOverview();
+  if(pageId==='tasks')renderOverview();
   if(pageId==='report')renderReport();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1863,8 +1849,9 @@ document.querySelectorAll('.nav-item').forEach(item=>{
 });
 // Restore last page on load (deferred so render() has run)
 function initNav(){
-  const saved=localStorage.getItem('kn_page')||'overview';
-  navigateTo(saved);
+  const saved=localStorage.getItem('kn_page')||'profile';
+  // remap legacy 'overview' to 'tasks'
+  navigateTo(saved==='overview'?'tasks':saved);
 }
 
 // ─── SELECT / DESELECT ALL toggles
