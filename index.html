@@ -825,29 +825,293 @@ select:focus{border-color:var(--kn-blue)}
     padding-right:max(var(--gutter),env(safe-area-inset-right));
   }
 }
+
+/* ═══════════════════════════════════════════
+   COMMAND CENTER LAYOUT
+═══════════════════════════════════════════ */
+
+/* App shell: nav-rail + content area side-by-side */
+.app-shell{display:flex;min-height:100vh}
+
+/* Left navigation rail */
+.nav-rail{
+  width:220px;flex-shrink:0;
+  background:var(--kn-navy);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  scrollbar-width:none;z-index:100;
+  transition:width .25s ease,transform .25s ease;
+}
+.nav-rail::-webkit-scrollbar{display:none}
+[data-theme="light"] .nav-rail{background:var(--kn-navy);border-right-color:rgba(28,92,170,.2)}
+
+/* Logo area in rail */
+.rail-logo{
+  display:flex;align-items:center;gap:10px;
+  padding:18px 16px 14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;
+}
+.rail-logo-img{height:28px;width:28px;object-fit:contain}
+.rail-brand{display:flex;flex-direction:column;gap:1px}
+.rail-brand-name{font-size:16px;font-weight:800;color:#F7F8FA;letter-spacing:.02em;line-height:1}
+.rail-brand-sub{font-size:9px;color:var(--kn-silver);text-transform:uppercase;letter-spacing:.1em}
+
+/* Nav items */
+.nav-items{display:flex;flex-direction:column;gap:2px;padding:12px 10px;flex:1}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:6px;
+  font-size:12px;font-weight:500;color:rgba(247,248,250,.65);
+  cursor:pointer;border:1px solid transparent;
+  transition:all .15s ease;letter-spacing:.02em;
+  user-select:none;white-space:nowrap;
+}
+.nav-item:hover{color:#F7F8FA;background:rgba(74,139,200,.15)}
+.nav-item.active{
+  color:#F7F8FA;background:rgba(28,92,170,.35);
+  border-color:rgba(74,139,200,.4);
+}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.nav-label{flex:1}
+.nav-badge{
+  font-size:9px;font-weight:700;background:var(--kn-red);
+  color:#fff;border-radius:10px;padding:1px 6px;letter-spacing:.02em;
+}
+
+/* Bottom of rail */
+.rail-bottom{padding:12px 10px;border-top:1px solid rgba(255,255,255,.08)}
+.rail-upload-btn{
+  width:100%;display:flex;align-items:center;gap:8px;
+  padding:9px 12px;border-radius:6px;
+  background:rgba(28,92,170,.25);border:1px solid rgba(74,139,200,.3);
+  color:var(--kn-sky);font-size:11px;font-weight:600;cursor:pointer;
+  transition:all .15s ease;letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.rail-upload-btn:hover{background:rgba(28,92,170,.45);border-color:var(--kn-sky)}
+
+/* Mobile hamburger */
+.rail-toggle-btn{
+  display:none;position:fixed;top:12px;left:12px;z-index:200;
+  width:36px;height:36px;border-radius:8px;
+  background:var(--kn-navy);border:1px solid var(--border);
+  color:#F7F8FA;font-size:16px;cursor:pointer;
+  align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(13,46,90,.4);
+}
+
+/* Content area */
+.page-area{flex:1;min-width:0;display:flex;flex-direction:column;overflow-x:hidden}
+
+/* Named pages (replaces .page) */
+.app-page{display:none}
+.app-page.active{display:block}
+
+/* ─── OVERVIEW PAGE ─── */
+.ov-shell{
+  max-width:1200px;margin:0 auto;
+  padding:clamp(20px,4vw,40px) clamp(16px,4vw,40px) 60px;
+  display:flex;flex-direction:column;gap:24px;
+}
+.ov-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.ov-title-block{}
+.ov-label{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:4px}
+.ov-heading{font-size:clamp(20px,3vw,28px);font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.1}
+.ov-btn-new{
+  background:var(--kn-blue);border:none;border-radius:var(--radius);
+  padding:9px 18px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;
+  letter-spacing:.04em;display:flex;align-items:center;gap:6px;
+  transition:background .15s,transform .1s;
+}
+.ov-btn-new:hover{background:var(--kn-navy);transform:translateY(-1px)}
+
+/* Overview top row: ring + stats */
+.ov-row{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
+.ov-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:clamp(14px,2.5vw,20px)}
+.ov-card-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:10px}
+
+/* Maturity card (ring + level info) */
+.ov-maturity-card{display:flex;align-items:center;gap:20px;flex:0 0 auto}
+.ov-ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.ov-ring{width:110px;height:110px;transform:rotate(-90deg)}
+.ov-ring-track{fill:none;stroke:var(--border);stroke-width:10}
+.ov-ring-fill{fill:none;stroke:var(--kn-sky);stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:314;stroke-dashoffset:314;
+  transition:stroke-dashoffset .8s cubic-bezier(0,0,.2,1)}
+.ov-ring-lbl{
+  position:absolute;text-align:center;line-height:1;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.ov-ring-pct{font-size:22px;font-weight:800;color:var(--text)}
+.ov-ring-sub{font-size:9px;color:var(--muted)}
+
+.ov-maturity-info{display:flex;flex-direction:column;gap:8px;min-width:120px}
+.ov-level-name{font-size:15px;font-weight:700;color:var(--text)}
+.ov-level-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden;width:140px}
+.ov-level-fill{height:100%;background:linear-gradient(90deg,var(--kn-blue),var(--kn-sky));border-radius:3px;transition:width .8s ease}
+.ov-level-trend{font-size:11px;color:var(--medium);font-weight:600}
+
+/* Stat tiles */
+.ov-stats-col{display:flex;flex-direction:column;gap:12px}
+.ov-stat-tile{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:120px;flex:1
+}
+.ov-stat-n{font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.ov-stat-n.ov-red{color:var(--critical)}
+.ov-stat-k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+
+/* Momentum chart */
+.ov-momentum-card{flex:1;min-width:240px}
+.ov-momentum-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ov-momentum-trend{font-size:11px;color:var(--medium);font-weight:600}
+.ov-bars{display:flex;align-items:flex-end;gap:6px;height:60px}
+.ov-bar{
+  flex:1;border-radius:3px 3px 0 0;
+  background:rgba(74,139,200,.25);border:1px solid rgba(74,139,200,.4);
+  transition:height .6s cubic-bezier(.2,.8,.2,1);min-height:4px;
+}
+.ov-bar.active{background:linear-gradient(180deg,var(--kn-sky),var(--kn-blue));border-color:var(--kn-sky)}
+
+/* Next best actions */
+.ov-nba-card{flex:1;min-width:280px}
+.ov-nba-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.ov-nba-list{display:flex;flex-direction:column;gap:8px}
+.ov-nba-item{
+  background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  padding:10px 12px 10px 14px;display:flex;align-items:flex-start;gap:10px;
+  position:relative;overflow:hidden;cursor:pointer;
+  transition:border-color .15s,transform .1s;
+}
+.ov-nba-item:hover{border-color:var(--kn-blue);transform:translateX(2px)}
+.ov-nba-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:6px 0 0 6px}
+.ov-nba-item.crit::before{background:var(--critical)}
+.ov-nba-item.high::before{background:var(--high)}
+.ov-nba-item.med::before{background:var(--medium)}
+.ov-nba-text{flex:1;font-size:11px;color:var(--text);line-height:1.5;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ov-nba-chip{
+  flex-shrink:0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  padding:2px 7px;border-radius:10px;
+}
+.chip-crit{background:rgba(200,40,30,.12);color:var(--critical);border:1px solid rgba(200,40,30,.3)}
+.chip-high{background:rgba(224,123,0,.12);color:var(--high);border:1px solid rgba(224,123,0,.3)}
+.chip-med{background:rgba(0,168,122,.12);color:var(--medium);border:1px solid rgba(0,168,122,.3)}
+
+/* ─── EXEC REPORT PAGE ─── */
+.rp-shell{
+  max-width:1200px;margin:0 auto;
+  padding:clamp(20px,4vw,40px) clamp(16px,4vw,40px) 60px;
+  display:flex;flex-direction:column;gap:24px;
+}
+.rp-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.rp-actions{display:flex;gap:8px}
+.rp-btn{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:7px 14px;color:var(--text);font-size:11px;cursor:pointer;
+  transition:border-color .15s;
+}
+.rp-btn:hover{border-color:var(--kn-blue)}
+.rp-grid{display:grid;grid-template-columns:auto 1fr;gap:16px}
+.rp-score-card{
+  display:flex;align-items:center;gap:16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:clamp(14px,2.5vw,20px);
+}
+.rp-score-info{display:flex;flex-direction:column;gap:6px}
+.rp-score-label{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.rp-score-trend{font-size:12px;color:var(--medium);font-weight:600}
+.rp-score-target{font-size:11px;color:var(--muted)}
+.rp-trend-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:clamp(14px,2.5vw,20px);
+}
+.rp-heat-fw-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.rp-heatmap-card,.rp-fw-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:clamp(14px,2.5vw,20px);
+}
+.rp-heatmap-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.rp-heatmap-hint{font-size:10px;color:var(--muted)}
+.rp-heat-grid{display:grid;gap:3px}
+.rp-heat-row-label{font-size:10px;color:var(--muted);display:flex;align-items:center;padding-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+.rp-heat-cell{
+  aspect-ratio:1.8/1;border-radius:4px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.05);
+  transition:transform .1s,opacity .1s;
+}
+.rp-heat-cell:hover{transform:scale(1.08);opacity:.9}
+.rp-heat-col-header{font-size:9px;color:var(--muted);text-align:center;padding:2px 0}
+.rp-fw-list{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.rp-fw-row{display:flex;flex-direction:column;gap:3px}
+.rp-fw-meta{display:flex;justify-content:space-between;font-size:11px}
+.rp-fw-name{color:var(--text)}
+.rp-fw-pct{color:var(--kn-sky);font-weight:700}
+.rp-fw-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.rp-fw-fill{height:100%;background:linear-gradient(90deg,var(--kn-blue),var(--kn-sky));border-radius:3px;transition:width .8s ease}
+
+/* ─── PROFILE STEPPER ─── */
+.stepper-shell{
+  max-width:680px;margin:0 auto;
+  padding:clamp(20px,4vw,40px) clamp(16px,4vw,40px) 60px;
+}
+.stepper-header{margin-bottom:28px}
+.stepper-nav{display:flex;gap:0;margin-bottom:24px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.stepper-step{
+  flex:1;padding:10px 12px;text-align:center;
+  font-size:11px;font-weight:600;color:var(--muted);
+  background:var(--surface);cursor:pointer;
+  border-right:1px solid var(--border);transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.stepper-step:last-child{border-right:none}
+.stepper-step.active{background:rgba(28,92,170,.2);color:var(--kn-sky);border-bottom:2px solid var(--kn-sky)}
+.stepper-step.done{background:rgba(0,168,122,.08);color:var(--medium)}
+.step-num{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--border);color:var(--muted);
+  font-size:10px;font-weight:800;display:inline-flex;
+  align-items:center;justify-content:center;flex-shrink:0;
+}
+.stepper-step.active .step-num{background:var(--kn-blue);color:#fff}
+.stepper-step.done .step-num{background:var(--medium);color:#fff}
+.stepper-panel{display:none}
+.stepper-panel.active{display:block;animation:fadeUp .3s ease both}
+.stepper-footer{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:10px}
+
+/* ─── RESPONSIVE: mobile nav ─── */
+@media(max-width:900px){
+  .app-shell{flex-direction:column}
+  .nav-rail{
+    width:100%;height:auto;position:static;
+    flex-direction:row;align-items:center;
+    padding:0 12px;border-right:none;border-bottom:1px solid var(--border);
+  }
+  .rail-logo{border-bottom:none;padding:10px 8px 10px 0;flex-shrink:0}
+  .rail-brand-sub{display:none}
+  .nav-items{flex-direction:row;padding:8px 0;gap:0;overflow-x:auto;scrollbar-width:none}
+  .nav-items::-webkit-scrollbar{display:none}
+  .nav-item{padding:8px 12px;font-size:11px;white-space:nowrap}
+  .nav-icon{display:none}
+  .rail-bottom{display:none}
+  .ov-maturity-card{flex-direction:column;align-items:flex-start}
+  .rp-grid{grid-template-columns:1fr}
+  .rp-heat-fw-row{grid-template-columns:1fr}
+}
+@media(max-width:479px){
+  .nav-rail{padding:0 8px}
+  .nav-item{padding:7px 9px;font-size:10px}
+  .rail-brand-name{font-size:14px}
+}
 </style>
 </head>
 <body>
 <button class="theme-fab" id="theme-fab" title="Toggle light/dark mode" aria-label="Toggle theme">🌙</button>
 
-<!-- BRAND HEADER -->
-<header class="brand-header">
-  <div class="brand-logo-area">
-    <img src="https://lens.kneuralabs.com/LOGO.png" alt="Kneuralens" class="brand-logo" onerror="this.style.display='none'">
-    <div>
-      <div class="brand-name">KneuraLens<sup>TM</sup></div>
-      <div class="brand-tagline">AI Governance Maturity Platform · Kneuralabs</div>
-    </div>
-  </div>
-  <div class="brand-actions">
-    <span class="upload-badge" id="upload-badge">✓ Tasks Loaded</span>
-    <button class="btn-upload-excel" id="btn-open-upload" title="Upload Excel Tasks">
-      <span>⬆</span> Upload Tasks
-    </button>
-  </div>
-</header>
-
-<!-- EXCEL UPLOAD MODAL -->
+<!-- UPLOAD MODAL (moved here, outside shell) -->
 <div class="modal-overlay" id="upload-modal">
   <div class="modal-box">
     <h2>📊 Upload Task List via Excel</h2>
@@ -856,7 +1120,7 @@ select:focus{border-color:var(--kn-blue)}
       <div class="col-map-row"><span class="col-map-key">priority</span><span class="col-map-val">critical / high / medium / low</span></div>
       <div class="col-map-row"><span class="col-map-key">task</span><span class="col-map-val">Task description text</span></div>
       <div class="col-map-row"><span class="col-map-key">level</span><span class="col-map-val">L1 / L2 / L3 / L4</span></div>
-      <div class="col-map-row"><span class="col-map-key">theme</span><span class="col-map-val">Governance & Leadership, etc.</span></div>
+      <div class="col-map-row"><span class="col-map-key">theme</span><span class="col-map-val">Governance &amp; Leadership, etc.</span></div>
       <div class="col-map-row"><span class="col-map-key">framework</span><span class="col-map-val">ISO-IEC 42001, NIST AI RMF, etc.</span></div>
     </div>
     <div class="drop-zone" id="drop-zone">
@@ -873,17 +1137,116 @@ select:focus{border-color:var(--kn-blue)}
   </div>
 </div>
 
-<!-- TABS -->
-<nav class="tabs">
-  <div class="tab active" data-tab="customer">🏢 Profile</div>
-  <div class="tab" data-tab="tasks">☑ Tasks</div>
+<!-- APP SHELL -->
+<div class="app-shell">
+
+<!-- LEFT NAV RAIL -->
+<nav class="nav-rail" id="nav-rail">
+  <div class="rail-logo">
+    <img src="https://lens.kneuralabs.com/LOGO.png" alt="" class="rail-logo-img" onerror="this.style.display='none'">
+    <div class="rail-brand">
+      <div class="rail-brand-name">KneuraLens</div>
+      <div class="rail-brand-sub">AI Governance</div>
+    </div>
+  </div>
+  <div class="nav-items">
+    <div class="nav-item active" data-page="overview"><span class="nav-icon">◎</span><span class="nav-label">Overview</span></div>
+    <div class="nav-item" data-page="tasks"><span class="nav-icon">☑</span><span class="nav-label">Tasks</span><span class="nav-badge" id="nav-crit-badge" style="display:none"></span></div>
+    <div class="nav-item" data-page="report"><span class="nav-icon">📊</span><span class="nav-label">Reports</span></div>
+    <div class="nav-item" data-page="profile"><span class="nav-icon">🏢</span><span class="nav-label">Profile</span></div>
+  </div>
+  <div class="rail-bottom">
+    <button class="rail-upload-btn" id="btn-open-upload"><span>⬆</span> Upload Tasks</button>
+    <div style="height:8px"></div>
+    <span class="upload-badge" id="upload-badge" style="display:none;font-size:9px;color:var(--medium);padding:4px 0">✓ Tasks Loaded</span>
+  </div>
 </nav>
 
-<!-- TASKS PAGE -->
-<div class="page" id="tab-tasks">
+<!-- CONTENT AREA -->
+<div class="page-area">
+
+<!-- ── OVERVIEW PAGE ── -->
+<div class="app-page active" id="page-overview">
+<div class="ov-shell">
+  <div class="ov-topbar">
+    <div class="ov-title-block">
+      <div class="ov-label">AI Governance Maturity</div>
+      <div class="ov-heading">Where you stand</div>
+    </div>
+    <button class="ov-btn-new" onclick="navigateTo('tasks')">☑ View All Tasks →</button>
+  </div>
+
+  <!-- Row 1: maturity ring + stats + momentum -->
+  <div class="ov-row">
+    <!-- Maturity ring card -->
+    <div class="ov-card ov-maturity-card">
+      <div class="ov-ring-wrap">
+        <svg class="ov-ring" viewBox="0 0 120 120">
+          <circle class="ov-ring-track" cx="60" cy="60" r="50"/>
+          <circle class="ov-ring-fill" id="ov-ring-fill" cx="60" cy="60" r="50"/>
+        </svg>
+        <div class="ov-ring-lbl">
+          <span class="ov-ring-pct" id="ov-pct">0%</span>
+          <span class="ov-ring-sub">overall</span>
+        </div>
+      </div>
+      <div class="ov-maturity-info">
+        <div class="ov-card-label">Maturity Level</div>
+        <div class="ov-level-name" id="ov-level-name">L1 · Assess</div>
+        <div class="ov-level-track"><div class="ov-level-fill" id="ov-level-fill"></div></div>
+        <div class="ov-level-trend" id="ov-level-trend">Computing…</div>
+      </div>
+    </div>
+
+    <!-- Stat tiles -->
+    <div class="ov-stats-col">
+      <div class="ov-stat-tile">
+        <div class="ov-stat-n" id="ov-total">0</div>
+        <div class="ov-stat-k">tasks total</div>
+      </div>
+      <div class="ov-stat-tile">
+        <div class="ov-stat-n ov-red" id="ov-critical">0</div>
+        <div class="ov-stat-k">critical open</div>
+      </div>
+    </div>
+
+    <!-- Momentum chart -->
+    <div class="ov-card ov-momentum-card">
+      <div class="ov-momentum-head">
+        <div class="ov-card-label" style="margin:0">Completion momentum · last 8 weeks</div>
+        <div class="ov-momentum-trend" id="ov-momentum-trend">▲ building</div>
+      </div>
+      <div class="ov-bars" id="ov-bars">
+        <div class="ov-bar" style="height:20%"></div>
+        <div class="ov-bar" style="height:28%"></div>
+        <div class="ov-bar" style="height:35%"></div>
+        <div class="ov-bar" style="height:42%"></div>
+        <div class="ov-bar" style="height:50%"></div>
+        <div class="ov-bar" style="height:60%"></div>
+        <div class="ov-bar" style="height:74%"></div>
+        <div class="ov-bar active" style="height:90%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: next best actions -->
+  <div class="ov-card ov-nba-card" style="flex:unset">
+    <div class="ov-nba-head">
+      <div class="ov-card-label" style="margin:0">Next best actions — top incomplete tasks</div>
+      <div style="font-size:10px;color:var(--muted)" id="ov-nba-count"></div>
+    </div>
+    <div class="ov-nba-list" id="ov-nba-list">
+      <div style="color:var(--muted);font-size:12px;padding:12px 0">Loading tasks…</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── TASKS PAGE ── -->
+<div class="app-page" id="page-tasks">
 <header class="hdr">
   <div class="hdr-inner">
-    <img src="https://lens.kneuralabs.com/LOGO.png" alt="KNeuralLens" class="logo" onerror="this.style.display='none'">
+    <img src="https://lens.kneuralabs.com/LOGO.png" alt="" class="logo" onerror="this.style.display='none'">
     <div class="hdr-title">AI Governance Maturity — Task Checklist</div>
     <div class="hdr-stats">
       <div class="stat-pill"><span id="s-done" class="s-done">0</span>done</div>
@@ -949,8 +1312,6 @@ select:focus{border-color:var(--kn-blue)}
       <button class="sb-collapse" id="sb-collapse" title="Collapse sidebar">◀</button>
     </div>
     <div class="sb-body" id="sb-body">
-
-      <!-- Overall Ring -->
       <div class="sb-card">
         <div class="sb-card-title">Overall Completion</div>
         <div class="sb-ring-wrap">
@@ -966,41 +1327,126 @@ select:focus{border-color:var(--kn-blue)}
           </div>
         </div>
       </div>
-
-      <!-- By Priority -->
       <div class="sb-card">
         <div class="sb-card-title">By Priority</div>
         <div class="sb-bars" id="sb-pri-bars"></div>
       </div>
-
-      <!-- By Theme -->
       <div class="sb-card">
         <div class="sb-card-title">By Theme</div>
         <div class="sb-bars" id="sb-theme-bars"></div>
       </div>
-
-      <!-- By Level -->
       <div class="sb-card">
         <div class="sb-card-title">By Maturity Level</div>
         <div class="sb-level-grid" id="sb-level-grid"></div>
       </div>
-
-      <!-- By Status -->
       <div class="sb-card">
         <div class="sb-card-title">Status Breakdown</div>
         <div class="sb-status-list" id="sb-status-list"></div>
       </div>
-
     </div>
   </aside>
 </div>
 </div>
 
-<!-- CUSTOMER PAGE -->
-<div class="page active" id="tab-customer">
-<div class="cust-page">
-  <div class="cust-inner">
+<!-- ── EXEC REPORT PAGE ── -->
+<div class="app-page" id="page-report">
+<div class="rp-shell">
+  <div class="rp-topbar">
+    <div>
+      <div class="ov-label">AI Governance Posture</div>
+      <div class="ov-heading">Maturity Report</div>
+    </div>
+    <div class="rp-actions">
+      <button class="rp-btn" onclick="window.print()">⤓ Export PDF</button>
+      <button class="rp-btn" id="rp-period-btn">Q2 2025 ⌄</button>
+    </div>
+  </div>
 
+  <!-- Score + Trend row -->
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch">
+    <div class="rp-score-card">
+      <div class="ov-ring-wrap">
+        <svg class="ov-ring" viewBox="0 0 120 120">
+          <circle class="ov-ring-track" cx="60" cy="60" r="50"/>
+          <circle class="ov-ring-fill" id="rp-ring-fill" cx="60" cy="60" r="50"/>
+        </svg>
+        <div class="ov-ring-lbl">
+          <span class="ov-ring-pct" id="rp-pct">0%</span>
+          <span class="ov-ring-sub" id="rp-level">L1</span>
+        </div>
+      </div>
+      <div class="rp-score-info">
+        <div class="rp-score-label">Overall Maturity</div>
+        <div class="ov-level-name" id="rp-level-name">Computing…</div>
+        <div class="rp-score-trend" id="rp-trend">▲ +8% this quarter</div>
+        <div class="rp-score-target">Target: 80%</div>
+      </div>
+    </div>
+    <div class="rp-trend-card" style="flex:1;min-width:240px">
+      <div class="ov-card-label">Completion trend · last 5 periods</div>
+      <div class="ov-bars" id="rp-bars" style="height:80px;margin-top:12px">
+        <div class="ov-bar" style="height:30%"></div>
+        <div class="ov-bar" style="height:42%"></div>
+        <div class="ov-bar" style="height:54%"></div>
+        <div class="ov-bar" style="height:70%"></div>
+        <div class="ov-bar active" style="height:90%"></div>
+      </div>
+    </div>
+    <div class="ov-card" style="display:flex;flex-direction:column;gap:10px;min-width:160px">
+      <div class="ov-card-label">Quick Stats</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span style="color:var(--muted)">Total tasks</span><span id="rp-total" style="font-weight:700">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span style="color:var(--critical)">Critical open</span><span id="rp-crit" style="font-weight:700;color:var(--critical)">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span style="color:var(--medium)">Completed</span><span id="rp-done" style="font-weight:700;color:var(--medium)">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Heatmap + Framework coverage -->
+  <div class="rp-heat-fw-row">
+    <div class="rp-heatmap-card">
+      <div class="rp-heatmap-head">
+        <div class="ov-card-label" style="margin:0">Theme × Maturity Level Heatmap</div>
+        <div class="rp-heatmap-hint">darker = stronger completion</div>
+      </div>
+      <div class="rp-heat-grid" id="rp-heat-grid" style="grid-template-columns:auto repeat(4,1fr)">
+        <!-- populated by JS -->
+      </div>
+    </div>
+    <div class="rp-fw-card">
+      <div class="ov-card-label">Framework Coverage</div>
+      <div class="rp-fw-list" id="rp-fw-list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── PROFILE PAGE ── -->
+<div class="app-page" id="page-profile">
+<div class="stepper-shell">
+  <div class="stepper-header">
+    <div class="ov-label">Organisation Setup</div>
+    <div class="ov-heading">Configure your governance profile</div>
+  </div>
+
+  <!-- Stepper nav -->
+  <div class="stepper-nav" id="stepper-nav">
+    <div class="stepper-step active" data-step="0"><span class="step-num">1</span> Organisation</div>
+    <div class="stepper-step" data-step="1"><span class="step-num">2</span> Frameworks</div>
+    <div class="stepper-step" data-step="2"><span class="step-num">3</span> Focus</div>
+    <div class="stepper-step" data-step="3"><span class="step-num">4</span> Team &amp; Notes</div>
+  </div>
+
+  <!-- Step 1: Org Details -->
+  <div class="stepper-panel active" id="step-panel-0">
     <div class="cust-section">
       <h3>Organisation Details</h3>
       <div class="form-grid">
@@ -1026,7 +1472,14 @@ select:focus{border-color:var(--kn-blue)}
         <div class="form-field"><label>Contact Email</label><input id="c-email" type="email" placeholder="contact@example.com"></div>
       </div>
     </div>
+    <div class="stepper-footer">
+      <div></div>
+      <button class="btn-primary" onclick="goStep(1)">Next: Frameworks →</button>
+    </div>
+  </div>
 
+  <!-- Step 2: Frameworks -->
+  <div class="stepper-panel" id="step-panel-1">
     <div class="cust-section">
       <h3>Select Frameworks</h3>
       <div class="section-ctrl">
@@ -1046,7 +1499,14 @@ select:focus{border-color:var(--kn-blue)}
         <label><input type="checkbox" name="fw" value="G7 Hiroshima"><span>G7 Hiroshima</span></label>
       </div>
     </div>
+    <div class="stepper-footer">
+      <button class="btn-secondary" onclick="goStep(0)">← Back</button>
+      <button class="btn-primary" onclick="goStep(2)">Next: Focus →</button>
+    </div>
+  </div>
 
+  <!-- Step 3: Priority + Levels Focus -->
+  <div class="stepper-panel" id="step-panel-2">
     <div class="cust-section">
       <h3>Priority Focus</h3>
       <div class="section-ctrl">
@@ -1060,7 +1520,6 @@ select:focus{border-color:var(--kn-blue)}
         <label><input type="checkbox" name="pri" value="low"><span>▼ Low — Planned</span></label>
       </div>
     </div>
-
     <div class="cust-section">
       <h3>Maturity Levels</h3>
       <div class="section-ctrl">
@@ -1074,7 +1533,6 @@ select:focus{border-color:var(--kn-blue)}
         <label><input type="checkbox" name="lvl" value="L4"><span>L4 — Automate</span></label>
       </div>
     </div>
-
     <div class="cust-section">
       <h3>Governance Themes</h3>
       <div class="section-ctrl">
@@ -1082,21 +1540,28 @@ select:focus{border-color:var(--kn-blue)}
         <button class="btn-toggle-all" data-group="th">Select All</button>
       </div>
       <div class="multi-check">
-        <label><input type="checkbox" name="th" value="Governance & Leadership" checked><span>Governance &amp; Leadership</span></label>
-        <label><input type="checkbox" name="th" value="Risk Management" checked><span>Risk Management</span></label>
-        <label><input type="checkbox" name="th" value="Transparency & Explainability"><span>Transparency &amp; Explainability</span></label>
-        <label><input type="checkbox" name="th" value="Fairness, Bias & Non-discrimination"><span>Fairness &amp; Bias</span></label>
-        <label><input type="checkbox" name="th" value="Human Oversight & Human Rights"><span>Human Oversight</span></label>
-        <label><input type="checkbox" name="th" value="Data Governance & Privacy"><span>Data Governance</span></label>
-        <label><input type="checkbox" name="th" value="Security, Resilience & Reliability"><span>Security &amp; Resilience</span></label>
-        <label><input type="checkbox" name="th" value="Monitoring, Auditing & Compliance"><span>Monitoring &amp; Compliance</span></label>
-        <label><input type="checkbox" name="th" value="Stakeholder Engagement & Ethics"><span>Stakeholder &amp; Ethics</span></label>
-        <label><input type="checkbox" name="th" value="Innovation, Procurement & International"><span>Innovation &amp; Procurement</span></label>
+        <label><input type="checkbox" name="th" value="Governance &amp; Leadership" checked><span>Governance &amp; Leadership</span></label>
+        <label><input type="checkbox" name="th" value="Risk Management"><span>Risk Management</span></label>
+        <label><input type="checkbox" name="th" value="Transparency &amp; Explainability"><span>Transparency &amp; Explainability</span></label>
+        <label><input type="checkbox" name="th" value="Fairness, Bias &amp; Non-discrimination"><span>Fairness, Bias &amp; Non-discrimination</span></label>
+        <label><input type="checkbox" name="th" value="Human Oversight &amp; Human Rights"><span>Human Oversight &amp; Human Rights</span></label>
+        <label><input type="checkbox" name="th" value="Data Governance &amp; Privacy"><span>Data Governance &amp; Privacy</span></label>
+        <label><input type="checkbox" name="th" value="Security, Resilience &amp; Reliability"><span>Security, Resilience &amp; Reliability</span></label>
+        <label><input type="checkbox" name="th" value="Monitoring, Auditing &amp; Compliance"><span>Monitoring, Auditing &amp; Compliance</span></label>
+        <label><input type="checkbox" name="th" value="Stakeholder Engagement &amp; Ethics"><span>Stakeholder Engagement &amp; Ethics</span></label>
+        <label><input type="checkbox" name="th" value="Innovation, Procurement &amp; International"><span>Innovation, Procurement &amp; International</span></label>
       </div>
     </div>
+    <div class="stepper-footer">
+      <button class="btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn-primary" onclick="goStep(3)">Next: Team &amp; Notes →</button>
+    </div>
+  </div>
 
+  <!-- Step 4: Team & Notes + Save -->
+  <div class="stepper-panel" id="step-panel-3">
     <div class="cust-section">
-      <h3>Team & Notes</h3>
+      <h3>Team &amp; Notes</h3>
       <div class="form-grid">
         <div class="form-field" style="grid-column:1/-1">
           <label>Team Members (comma separated)</label>
@@ -1108,15 +1573,22 @@ select:focus{border-color:var(--kn-blue)}
         </div>
       </div>
     </div>
-
-    <div class="cust-actions">
-      <span class="saved-badge" id="saved-badge">✓ Profile Saved</span>
-      <button class="btn-secondary" id="btn-clear-profile">✕ Clear</button>
-      <button class="btn-primary" id="btn-save-profile">✓ Save &amp; Apply</button>
+    <div class="stepper-footer">
+      <button class="btn-secondary" onclick="goStep(2)">← Back</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="saved-badge" id="saved-badge">✓ Profile Saved</span>
+        <button class="btn-secondary" id="btn-clear-profile">✕ Clear</button>
+        <button class="btn-primary" id="btn-save-profile">✓ Save &amp; Apply</button>
+      </div>
     </div>
   </div>
+
 </div>
 </div>
+
+</div><!-- /page-area -->
+</div><!-- /app-shell -->
+
 
 <script>
 // ─── DATA (abridged from xlsx — first 160 tasks ISO-IEC 42001 + summary already embedded)
@@ -1378,13 +1850,23 @@ document.getElementById('btn-reset').addEventListener('click',()=>{
   state={};SS('kn_state',state);render();
 });
 
-// ─── TABS
-document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  t.classList.add('active');
-  document.getElementById('tab-'+t.dataset.tab).classList.add('active');
-}));
+// ─── NAV ROUTING
+function navigateTo(pageId){
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===pageId));
+  document.querySelectorAll('.app-page').forEach(x=>x.classList.toggle('active',x.id==='page-'+pageId));
+  try{localStorage.setItem('kn_page',pageId)}catch(e){}
+  if(pageId==='overview')renderOverview();
+  if(pageId==='report')renderReport();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>navigateTo(item.dataset.page));
+});
+// Restore last page on load (deferred so render() has run)
+function initNav(){
+  const saved=localStorage.getItem('kn_page')||'overview';
+  navigateTo(saved);
+}
 
 // ─── SELECT / DESELECT ALL toggles
 document.querySelectorAll('.btn-toggle-all').forEach(btn=>{
@@ -1451,11 +1933,8 @@ document.getElementById('btn-save-profile').addEventListener('click',()=>{
   badge.classList.add('show');
   setTimeout(()=>badge.classList.remove('show'),2500);
   render();
-  // Switch to tasks tab so customer sees filtered results immediately
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-  document.querySelector('[data-tab=tasks]').classList.add('active');
-  document.getElementById('tab-tasks').classList.add('active');
+  // Switch to tasks page so customer sees filtered results immediately
+  navigateTo('tasks');
 });
 
 document.getElementById('btn-clear-profile').addEventListener('click',()=>{
@@ -1590,19 +2069,22 @@ function parseRows(rows){
 }
 
 
-// ─── STICKY OFFSET: keep ctrl-bar flush below tabs
+// ─── STICKY OFFSET: ctrl-bar sticks just below nav rail on mobile
 function updateStickyOffsets(){
-  const tabsEl = document.querySelector('.tabs');
+  const navRail = document.querySelector('.nav-rail');
   const ctrlBar = document.querySelector('.ctrl-bar');
-  if(tabsEl){
-    const h = tabsEl.offsetHeight;
+  if(navRail && window.innerWidth <= 900){
+    const h = navRail.offsetHeight;
     document.documentElement.style.setProperty('--tabs-h', h + 'px');
     if(ctrlBar) ctrlBar.style.top = h + 'px';
+  } else {
+    document.documentElement.style.setProperty('--tabs-h', '0px');
+    if(ctrlBar) ctrlBar.style.top = '0px';
   }
 }
 updateStickyOffsets();
 window.addEventListener('resize', updateStickyOffsets);
-new ResizeObserver(updateStickyOffsets).observe(document.querySelector('.tabs'));
+new ResizeObserver(updateStickyOffsets).observe(document.querySelector('.nav-rail'));
 
 // ─── THEME TOGGLE
 (function(){
@@ -1765,6 +2247,112 @@ loadProfile();
 })();
 
 render();
+
+// ─── OVERVIEW RENDER
+function renderOverview(){
+  const total=T.length;
+  let done=0,criticalOpen=0;
+  T.forEach((t,i)=>{
+    const s=state[i]||{};
+    const isDone=s.done||s.status==='completed';
+    if(isDone)done++;
+    if(t[0]==='critical'&&!isDone)criticalOpen++;
+  });
+  const pct=total?Math.round(done/total*100):0;
+  const ringFill=document.getElementById('ov-ring-fill');
+  if(ringFill)setTimeout(()=>{ringFill.style.strokeDashoffset=(314-(pct/100)*314).toFixed(1)},80);
+  const ovPct=document.getElementById('ov-pct');if(ovPct)ovPct.textContent=pct+'%';
+  const ovTotal=document.getElementById('ov-total');if(ovTotal)ovTotal.textContent=total;
+  const ovCrit=document.getElementById('ov-critical');if(ovCrit)ovCrit.textContent=criticalOpen;
+  const lvl=pct>=75?'L3 · Implementing':pct>=50?'L2 · Developing':'L1 · Assess';
+  const ovLN=document.getElementById('ov-level-name');if(ovLN)ovLN.textContent=lvl;
+  const ovLF=document.getElementById('ov-level-fill');if(ovLF)setTimeout(()=>{ovLF.style.width=pct+'%'},80);
+  const ovLT=document.getElementById('ov-level-trend');if(ovLT)ovLT.textContent=pct>0?pct+'% complete':' Starting your journey';
+  const nbaList=document.getElementById('ov-nba-list');
+  const nbaCnt=document.getElementById('ov-nba-count');
+  if(nbaList){
+    const incomplete=T.map((t,i)=>[t,i]).filter(([t,i])=>{const s=state[i]||{};return !(s.done||s.status==='completed');});
+    const priOrder={critical:0,high:1,medium:2,low:3};
+    incomplete.sort(([a],[b])=>(priOrder[a[0]]||0)-(priOrder[b[0]]||0));
+    const top=incomplete.slice(0,5);
+    if(nbaCnt)nbaCnt.textContent=incomplete.length+' tasks remaining';
+    if(!top.length){nbaList.innerHTML='<div style="color:var(--medium);font-size:13px;padding:12px 0">All tasks complete!</div>';return;}
+    nbaList.innerHTML=top.map(([t,i])=>{
+      const pc=t[0]==='critical'?'crit':t[0]==='high'?'high':'med';
+      const cc=t[0]==='critical'?'chip-crit':t[0]==='high'?'chip-high':'chip-med';
+      const lbl=t[0].charAt(0).toUpperCase()+t[0].slice(1);
+      const txt=t[1].length>140?t[1].slice(0,137)+'...':t[1];
+      return '<div class="ov-nba-item '+pc+'" onclick="navigateTo(\'tasks\')"><div class="ov-nba-text">'+txt+'</div><span class="ov-nba-chip '+cc+'">'+lbl+'</span></div>';
+    }).join('');
+  }
+  const navBadge=document.getElementById('nav-crit-badge');
+  if(navBadge){if(criticalOpen>0){navBadge.textContent=criticalOpen;navBadge.style.display='inline';}else navBadge.style.display='none';}
+}
+
+// ─── REPORT RENDER
+function renderReport(){
+  const total=T.length;let done=0,criticalOpen=0;
+  T.forEach((t,i)=>{const s=state[i]||{};const isDone=s.done||s.status==='completed';if(isDone)done++;if(t[0]==='critical'&&!isDone)criticalOpen++;});
+  const pct=total?Math.round(done/total*100):0;
+  const rpRing=document.getElementById('rp-ring-fill');
+  if(rpRing)setTimeout(()=>{rpRing.style.strokeDashoffset=(314-(pct/100)*314).toFixed(1)},80);
+  const rpPct=document.getElementById('rp-pct');if(rpPct)rpPct.textContent=pct+'%';
+  const rpLvl=document.getElementById('rp-level');const rpLN=document.getElementById('rp-level-name');
+  const lbl=pct>=75?'L3 · Implementing':pct>=50?'L2 · Developing':'L1 · Assess';
+  if(rpLvl)rpLvl.textContent=pct>=75?'L3':pct>=50?'L2':'L1';
+  if(rpLN)rpLN.textContent=lbl;
+  const rpTotal=document.getElementById('rp-total');if(rpTotal)rpTotal.textContent=total;
+  const rpCrit=document.getElementById('rp-crit');if(rpCrit)rpCrit.textContent=criticalOpen;
+  const rpDone=document.getElementById('rp-done');if(rpDone)rpDone.textContent=done;
+  // Heatmap
+  const heatGrid=document.getElementById('rp-heat-grid');
+  if(heatGrid){
+    const themes=['Governance & Leadership','Risk Management','Transparency & Explainability','Fairness, Bias & Non-discrimination','Human Oversight & Human Rights','Data Governance & Privacy','Security, Resilience & Reliability','Monitoring, Auditing & Compliance','Stakeholder Engagement & Ethics','Innovation, Procurement & International'];
+    const levels=['L1','L2','L3','L4'];
+    const sh={'Governance & Leadership':'Gov & Leadership','Risk Management':'Risk Mgmt','Transparency & Explainability':'Transparency','Fairness, Bias & Non-discrimination':'Fairness','Human Oversight & Human Rights':'Human Oversight','Data Governance & Privacy':'Data & Privacy','Security, Resilience & Reliability':'Security','Monitoring, Auditing & Compliance':'Monitoring','Stakeholder Engagement & Ethics':'Stakeholders','Innovation, Procurement & International':'Innovation'};
+    const map={};
+    T.forEach((t,i)=>{const key=t[3]+'|'+t[2];if(!map[key])map[key]={total:0,done:0};map[key].total++;const s=state[i]||{};if(s.done||s.status==='completed')map[key].done++;});
+    heatGrid.style.gridTemplateColumns='100px repeat(4,1fr)';
+    let html='<div></div>'+levels.map(l=>'<div class="rp-heat-col-header">'+l+'</div>').join('');
+    themes.forEach(th=>{
+      html+='<div class="rp-heat-row-label" title="'+th+'">'+(sh[th]||th.slice(0,12))+'</div>';
+      levels.forEach(lv=>{
+        const d=map[th+'|'+lv]||{total:0,done:0};
+        const p=d.total?d.done/d.total:0;
+        const bg='rgba(28,92,170,'+(p*0.7+0.06).toFixed(2)+')';
+        const title=th+' x '+lv+': '+d.done+'/'+d.total+' ('+Math.round(p*100)+'%)';
+        html+='<div class="rp-heat-cell" style="background:'+bg+'" title="'+title+'" onclick="navigateTo(\'tasks\')"></div>';
+      });
+    });
+    heatGrid.innerHTML=html;
+  }
+  // Framework coverage
+  const fwList=document.getElementById('rp-fw-list');
+  if(fwList){
+    const fws=['ISO-IEC 42001','NIST AI RMF','EU AI Act','OECD AI Principles','Singapore IMDA','Canada ADM'];
+    const fwMap={};
+    T.forEach((t,i)=>{if(!fwMap[t[4]])fwMap[t[4]]={total:0,done:0};fwMap[t[4]].total++;const s=state[i]||{};if(s.done||s.status==='completed')fwMap[t[4]].done++;});
+    fwList.innerHTML=fws.map(fw=>{
+      const d=fwMap[fw]||{total:0,done:0};const p=d.total?Math.round(d.done/d.total*100):0;
+      return '<div class="rp-fw-row"><div class="rp-fw-meta"><span class="rp-fw-name">'+fw+'</span><span class="rp-fw-pct">'+p+'%</span></div><div class="rp-fw-track"><div class="rp-fw-fill" style="width:0%" data-w="'+p+'"></div></div></div>';
+    }).join('');
+    setTimeout(()=>{fwList.querySelectorAll('[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%'});},80);
+  }
+}
+
+// ─── STEPPER
+let _stepIdx=0;
+function goStep(n){
+  const panels=document.querySelectorAll('.stepper-panel');
+  const steps=document.querySelectorAll('.stepper-step');
+  _stepIdx=n;
+  panels.forEach((p,i)=>p.classList.toggle('active',i===n));
+  steps.forEach((s,i)=>{s.classList.toggle('active',i===n);s.classList.toggle('done',i<n);});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.stepper-step').forEach((s,i)=>s.addEventListener('click',()=>goStep(i)));
+
+initNav();
 </script>
 </body>
 </html>
