@@ -1309,7 +1309,6 @@ select:focus{border-color:var(--kn-blue)}
   <aside class="sidebar" id="sidebar">
     <div class="sb-header">
       <span class="sb-title">Progress Dashboard</span>
-      <button class="sb-collapse" id="sb-collapse" title="Collapse sidebar">◀</button>
     </div>
     <div class="sb-body" id="sb-body">
       <div class="sb-card">
@@ -2105,15 +2104,7 @@ loadProfile();
 // ─── SIDEBAR
 (function(){
   const sidebar = document.getElementById('sidebar');
-  const colBtn  = document.getElementById('sb-collapse');
-  let collapsed = localStorage.getItem('kn_sb_collapsed')==='1';
-  function applyCollapsed(){
-    sidebar.classList.toggle('collapsed', collapsed);
-    colBtn.textContent = collapsed ? '▶' : '◀';
-    localStorage.setItem('kn_sb_collapsed', collapsed?'1':'0');
-  }
-  applyCollapsed();
-  colBtn.addEventListener('click',()=>{collapsed=!collapsed;applyCollapsed();});
+  // sidebar always visible
 
   const PRI_COLORS = {critical:'var(--critical)',high:'var(--high)',medium:'var(--medium)',low:'var(--low)'};
   const STATUS_COLORS = {'not-started':'var(--muted)','initiated':'var(--low)','in-progress':'var(--high)','blocked':'var(--critical)','completed':'var(--medium)'};
