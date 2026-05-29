@@ -154,12 +154,12 @@ taskRoot.addEventListener('click',ev=>{
   const act=actEl&&actEl.dataset.act;
   if(act==='chk'){
     const s=state[i]||{};s.done=!s.done;if(s.done)s.status='completed';else if(s.status==='completed')s.status=defStatus(T[i][0]);
-    state[i]=s;SS('kn_state',state);renderTasks();syncBadges();return;
+    state[i]=s;SS('kn_state',state);patchRow(i,row);return;
   }
   if(act==='status'){
     const s=state[i]||{};const cur=s.status||defStatus(T[i][0]);
     const next=STATUSES[(STATUSES.indexOf(cur)+1)%STATUSES.length];
-    s.status=next;s.done=next==='completed';state[i]=s;SS('kn_state',state);renderTasks();syncBadges();return;
+    s.status=next;s.done=next==='completed';state[i]=s;SS('kn_state',state);patchRow(i,row);return;
   }
   if(act==='assignee'){openAssignee(actEl,i);return;}
 });
@@ -184,6 +184,12 @@ function openAssignee(el,i){
   el.innerHTML='';el.appendChild(sel);sel.focus();
   const close=()=>{const s=state[i]||{};s.assignee=sel.value;state[i]=s;SS('kn_state',state);renderTasks();};
   sel.addEventListener('change',close);sel.addEventListener('blur',()=>renderTasks());
+}
+
+function patchRow(i,oldRow){
+  const tmp=document.createElement('div');tmp.innerHTML=rowHTML(i);
+  oldRow.replaceWith(tmp.firstChild);
+  const idxs=filtered();updateTaskStats(idxs);$('#nav-tasks-ct').textContent=idxs.length;syncBadges();
 }
 
 function updateTaskStats(idxs){
@@ -235,8 +241,27 @@ function renderOverview(){
   const lead=sparkPct.indexOf(Math.max(...sparkPct));
   $('#ov-spark').innerHTML=sparkPct.map((p,n)=>`<div class="sb${n===lead&&p>0?' lead':''}" style="height:0" data-h="${Math.max(p,3)}" title="${LEVELS[n]} · ${p}%"></div>`).join('');
   setTimeout(()=>$$('#ov-spark .sb').forEach(b=>b.style.height=b.dataset.h+'%'),60);
+  renderPersonChart();
 }
 function animateBars(sel){setTimeout(()=>$$(sel+' .barfill').forEach(b=>b.style.width=b.dataset.w+'%'),60);}
+
+function renderPersonChart(){
+  const personMap={};
+  for(let i=0;i<T.length;i++){const a=eff(i).assignee;if(!personMap[a])personMap[a]={t:0,d:0};personMap[a].t++;if(isDone(i))personMap[a].d++;}
+  const sorted=Object.entries(personMap).filter(([,v])=>v.t>0).sort((a,b)=>b[1].t-a[1].t);
+  const maxT=sorted.length?sorted[0][1].t:1;
+  $('#ov-person-sub').textContent=sorted.length+' people';
+  $('#ov-person-bars').innerHTML=sorted.map(([name,v])=>{
+    const pct=Math.round(v.d/v.t*100);const barW=Math.round(v.t/maxT*100);
+    return `<div class="person-row">
+      <div class="person-info"><span class="avatar" style="background:${avaColor(name)}">${esc(initials(name)).toUpperCase()}</span>
+        <span class="person-name">${esc(name)}</span>
+        <span class="person-stats tnum">${v.t} tasks &nbsp;·&nbsp; ${pct}% done</span></div>
+      <div class="bartrack"><div class="barfill" style="width:0;background:${avaColor(name)}" data-w="${barW}"></div></div>
+    </div>`;
+  }).join('');
+  animateBars('#ov-person-bars');
+}
 
 // ════ REPORT ════
 function renderReport(){
