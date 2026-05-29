@@ -44,6 +44,10 @@
   --mono:'Inter','Aptos Display',sans-serif;
   --head:'Inter','Aptos Display',sans-serif;
   --shadow:rgba(13,46,90,.6);
+  --gutter:clamp(16px,5vw,48px);
+  --vspace:clamp(10px,2vw,24px);
+  --max-w:1400px;
+  --hdr-h:0px; /* set by JS */
 
   /* Motion — brand spec */
   --ease-out:cubic-bezier(0.0,0.0,0.2,1);
@@ -337,12 +341,6 @@ select:focus{border-color:var(--kn-blue)}
    Vertical rhythm: --vspace (clamp 8px→24px)
    All sticky bars share same horizontal gutter.
 ══════════════════════════════════════════════ */
-:root{
-  --gutter:clamp(16px,5vw,48px);
-  --vspace:clamp(10px,2vw,24px);
-  --max-w:1400px;
-  --hdr-h:0px; /* set by JS */
-}
 
 /* ── Shared container: every row uses this ── */
 .brand-header,
@@ -1585,12 +1583,15 @@ const PERSONS = ['Alice Chen','Bob Patel','Carol Singh','David Kim','Eva Müller
 
 // ─── STORAGE
 const LS = k => JSON.parse(localStorage.getItem(k)||'null');
-const SS = (k,v) => localStorage.setItem(k,JSON.stringify(v));
+const SS = (k,v) => {if(k==='kn_state')v={...v,_v:LS_VERSION};localStorage.setItem(k,JSON.stringify(v));};
 
-let state = LS('kn_state') || {};
+const LS_VERSION = 1;
+let state = (()=>{const d=LS('kn_state');return(d&&d._v===LS_VERSION)?d:{};})();
 // state[key] = {done, status, assignee, startDate, endDate}
 
 let filters = {q:'',p:'',l:'',fw:'',th:'',st:''};
+const RING_CIRC = Math.round(2 * Math.PI * 50); // SVG r=50 circumference
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
 let custProfile = LS('kn_customer') || {frameworks:[],priorities:[],levels:[],themes:[]};
 
 // ─── HELPERS
@@ -1657,7 +1658,7 @@ function render(){
   const main=document.getElementById('main');
   main.innerHTML='';
   const items=filtered();
-  if(!items.length){main.innerHTML='<div class="empty"><h3>No tasks match</h3><p>Save your Customer Profile to filter tasks, or adjust filters above</p></div>';updateStats();if(window.renderSidebar)renderSidebar(T.filter((_,i)=>filtered().find(([t,ti])=>ti===i)));return}
+  if(!items.length){main.innerHTML='<div class="empty"><h3>No tasks match</h3><p>Save your Customer Profile to filter tasks, or adjust filters above</p></div>';updateStats(items);if(window.renderSidebar)renderSidebar(items);return}
 
   const groups={'critical':[],'high':[],'medium':[],'low':[]};
   items.forEach(([t,i])=>groups[t[0]].push([t,i]));
@@ -1799,12 +1800,12 @@ function render(){
     main.appendChild(sec);
   });
 
-  updateStats();
-  if(window.renderSidebar)renderSidebar(items.map(([t])=>t));
+  updateStats(items);
+  if(window.renderSidebar)renderSidebar(items);
 }
 
-function updateStats(){
-  const items=filtered();
+function updateStats(items){
+  if(!items)items=filtered();
   const total=items.length;
   const doneCount=items.filter(([t,i])=>(state[i]||{}).done).length;
   const pct=total?Math.round(doneCount/total*100):0;
@@ -1824,7 +1825,7 @@ function getTeam(){
 }
 
 // ─── CONTROLS
-document.getElementById('search').addEventListener('input',e=>{filters.q=e.target.value;render()});
+document.getElementById('search').addEventListener('input',debounce(e=>{filters.q=e.target.value;render();},180));
 document.getElementById('f-priority').addEventListener('change',e=>{filters.p=e.target.value;render()});
 document.getElementById('f-level').addEventListener('change',e=>{filters.l=e.target.value;render()});
 document.getElementById('f-fw').addEventListener('change',e=>{filters.fw=e.target.value;render()});
@@ -2097,24 +2098,18 @@ loadProfile();
   const STATUS_COLORS = {'not-started':'var(--muted)','initiated':'var(--low)','in-progress':'var(--high)','blocked':'var(--critical)','completed':'var(--medium)'};
   const THEME_COLORS = ['#4A8BC8','#00A87A','#E07B00','#C8281E','#6B7280','#A78BFA','#F472B6','#34D399','#60A5FA','#FBBF24'];
 
-  function defStatus(pri){return pri==='critical'?'not-started':pri==='high'?'not-started':'not-started';}
-
   window.renderSidebar = function(visibleTasks){
     if(!visibleTasks||!visibleTasks.length){
-      // Use all tasks if none passed
-      visibleTasks = T;
+      visibleTasks = T.map((t,i)=>[t,i]);
     }
 
-    const allIdxMap = new Map();
-    T.forEach((t,i)=>allIdxMap.set(t,i));
-
-    // Compute stats over visible tasks only
     const total = visibleTasks.length;
     let done = 0;
     const priMap={}, themeMap={}, levelMap={}, statusMap={};
 
-    visibleTasks.forEach(t=>{
-      const origIdx = T.indexOf(t);
+    visibleTasks.forEach(entry=>{
+      const t = Array.isArray(entry[0]) ? entry[0] : entry;
+      const origIdx = Array.isArray(entry[0]) ? entry[1] : T.indexOf(t);
       const s = state[origIdx]||{};
       const isDone = s.done||s.status==='completed';
       if(isDone) done++;
@@ -2147,8 +2142,7 @@ loadProfile();
     const pct = total?Math.round(done/total*100):0;
     document.getElementById('sb-pct').textContent = pct+'%';
     document.getElementById('sb-frac').textContent = done+'/'+total;
-    const circumference = 314;
-    const offset = circumference - (pct/100)*circumference;
+    const offset = RING_CIRC - (pct/100)*RING_CIRC;
     document.getElementById('sb-ring-fill').setAttribute('stroke-dashoffset', offset.toFixed(1));
 
     // Priority bars
@@ -2238,7 +2232,7 @@ function renderOverview(){
   });
   const pct=total?Math.round(done/total*100):0;
   const ringFill=document.getElementById('ov-ring-fill');
-  if(ringFill)setTimeout(()=>{ringFill.style.strokeDashoffset=(314-(pct/100)*314).toFixed(1)},80);
+  if(ringFill)setTimeout(()=>{ringFill.style.strokeDashoffset=(RING_CIRC-(pct/100)*RING_CIRC).toFixed(1)},80);
   const ovPct=document.getElementById('ov-pct');if(ovPct)ovPct.textContent=pct+'%';
   const ovTotal=document.getElementById('ov-total');if(ovTotal)ovTotal.textContent=total;
   const ovCrit=document.getElementById('ov-critical');if(ovCrit)ovCrit.textContent=criticalOpen;
@@ -2255,13 +2249,27 @@ function renderOverview(){
     const top=incomplete.slice(0,5);
     if(nbaCnt)nbaCnt.textContent=incomplete.length+' tasks remaining';
     if(!top.length){nbaList.innerHTML='<div style="color:var(--medium);font-size:13px;padding:12px 0">All tasks complete!</div>';return;}
-    nbaList.innerHTML=top.map(([t,i])=>{
+    const frag = document.createDocumentFragment();
+    top.forEach(([t])=>{
       const pc=t[0]==='critical'?'crit':t[0]==='high'?'high':'med';
       const cc=t[0]==='critical'?'chip-crit':t[0]==='high'?'chip-high':'chip-med';
       const lbl=t[0].charAt(0).toUpperCase()+t[0].slice(1);
       const txt=t[1].length>140?t[1].slice(0,137)+'...':t[1];
-      return '<div class="ov-nba-item '+pc+'" onclick="navigateTo(\'tasks\')"><div class="ov-nba-text">'+txt+'</div><span class="ov-nba-chip '+cc+'">'+lbl+'</span></div>';
-    }).join('');
+      const item=document.createElement('div');
+      item.className='ov-nba-item '+pc;
+      item.addEventListener('click',()=>navigateTo('tasks'));
+      const textEl=document.createElement('div');
+      textEl.className='ov-nba-text';
+      textEl.textContent=txt;
+      const chip=document.createElement('span');
+      chip.className='ov-nba-chip '+cc;
+      chip.textContent=lbl;
+      item.appendChild(textEl);
+      item.appendChild(chip);
+      frag.appendChild(item);
+    });
+    nbaList.innerHTML='';
+    nbaList.appendChild(frag);
   }
   const navBadge=document.getElementById('nav-crit-badge');
   if(navBadge){if(criticalOpen>0){navBadge.textContent=criticalOpen;navBadge.style.display='inline';}else navBadge.style.display='none';}
@@ -2273,7 +2281,7 @@ function renderReport(){
   T.forEach((t,i)=>{const s=state[i]||{};const isDone=s.done||s.status==='completed';if(isDone)done++;if(t[0]==='critical'&&!isDone)criticalOpen++;});
   const pct=total?Math.round(done/total*100):0;
   const rpRing=document.getElementById('rp-ring-fill');
-  if(rpRing)setTimeout(()=>{rpRing.style.strokeDashoffset=(314-(pct/100)*314).toFixed(1)},80);
+  if(rpRing)setTimeout(()=>{rpRing.style.strokeDashoffset=(RING_CIRC-(pct/100)*RING_CIRC).toFixed(1)},80);
   const rpPct=document.getElementById('rp-pct');if(rpPct)rpPct.textContent=pct+'%';
   const rpLvl=document.getElementById('rp-level');const rpLN=document.getElementById('rp-level-name');
   const lbl=pct>=75?'L3 · Implementing':pct>=50?'L2 · Developing':'L1 · Assess';
