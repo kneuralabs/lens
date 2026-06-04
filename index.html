@@ -2,6 +2,9 @@
 <html lang="en" data-theme="light" data-accent="blue" data-density="default">
 <head>
 <meta charset="UTF-8">
+<script>
+(function(){var K="kn-auth-session",S="https://sso.kneuralabs.com/";var p=new URLSearchParams(location.search),t=p.get("kn-auth");if(t){try{sessionStorage.setItem(K,t);}catch(e){}p.delete("kn-auth");history.replaceState(null,"",location.pathname+(p.toString()?"?"+p:"")+location.hash);}if(!sessionStorage.getItem(K)){location.replace(S+"?redirect="+encodeURIComponent(location.href));}})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>KneuraLens — AI Governance Maturity</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,7 +74,6 @@
       </div>
       <div class="content">
         <div class="profile-wrap">
-
           <div class="card card-pad">
             <div class="psec-h"><div class="psec-n">1</div><div><div class="psec-t">Organisation</div><div class="psec-d">Who you are — used on the executive report header.</div></div></div>
             <div class="fgrid" style="margin-top:16px">
@@ -85,13 +87,11 @@
               <div><label class="flabel" for="c-email">Contact email</label><input class="input" id="c-email" type="email" placeholder="lead@acme.com"></div>
             </div>
           </div>
-
           <div class="card card-pad">
             <div class="psec-h"><div class="psec-n">2</div><div><div class="psec-t">Frameworks in scope</div><div class="psec-d">Tasks are filtered to the standards you select.</div></div>
               <button class="btn btn-quiet sm psec-ctrl" data-all="fw">Select all</button></div>
             <div class="choices" id="ch-fw" style="margin-top:14px"></div>
           </div>
-
           <div class="card card-pad">
             <div class="psec-h"><div class="psec-n">3</div><div><div class="psec-t">Focus</div><div class="psec-d">Narrow by priority and target maturity level.</div></div></div>
             <label class="flabel" style="margin-top:16px">Priorities</label>
@@ -99,13 +99,11 @@
             <label class="flabel" style="margin-top:16px">Maturity levels</label>
             <div class="choices" id="ch-lvl"></div>
           </div>
-
           <div class="card card-pad">
             <div class="psec-h"><div class="psec-n">4</div><div><div class="psec-t">Governance themes</div><div class="psec-d">Leave empty to include every theme.</div></div>
               <button class="btn btn-quiet sm psec-ctrl" data-all="th">Select all</button></div>
             <div class="choices" id="ch-th" style="margin-top:14px"></div>
           </div>
-
           <div class="card card-pad">
             <div class="psec-h"><div class="psec-n">5</div><div><div class="psec-t">Team &amp; notes</div><div class="psec-d">Team members become assignable on tasks.</div></div></div>
             <div style="margin-top:16px">
@@ -117,7 +115,6 @@
               <textarea class="textarea" id="c-notes" placeholder="Context, objectives, key dates…"></textarea>
             </div>
           </div>
-
         </div>
       </div>
       <div class="profile-bar">
@@ -163,61 +160,22 @@
     <section class="screen" id="s-overview">
       <div class="topbar">
         <button class="iconbtn sq rail-toggle" data-rail-toggle><svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
-        <div class="tb-titles">
-          <div class="tb-eyebrow">Insight</div>
-          <div class="tb-title">Overview</div>
-        </div>
-        <div class="tb-actions">
-          <button class="btn btn-ghost" data-goto="tasks"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Go to tasks</button>
-        </div>
+        <div class="tb-titles"><div class="tb-eyebrow">Insight</div><div class="tb-title">Overview</div></div>
+        <div class="tb-actions"><button class="btn btn-ghost" data-goto="tasks"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Go to tasks</button></div>
       </div>
       <div class="content">
         <div class="grid-2" style="margin-bottom:16px">
-          <div class="card">
-            <div class="card-h"><span class="ch-t">Governance maturity</span><span class="ch-sub" id="ov-frac"></span></div>
-            <div class="card-pad">
-              <div class="maturity">
-                <div class="ring"><svg viewBox="0 0 120 120"><circle class="rtrack" cx="60" cy="60" r="50"/><circle class="rfill" id="ov-ring" cx="60" cy="60" r="50"/></svg>
-                  <div class="ring-lbl"><b id="ov-pct" class="tnum">0%</b><span>complete</span></div></div>
-                <div class="mat-info">
-                  <div class="mat-level" id="ov-level">L1 · Assess</div>
-                  <div class="mat-sub" id="ov-level-sub">Establishing your governance baseline.</div>
-                  <div class="prog mat-track"><i id="ov-level-bar" style="width:0%"></i></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-h"><span class="ch-t">At a glance</span></div>
-            <div class="card-pad">
-              <div class="stat-strip" id="ov-stats" style="margin:0;grid-template-columns:1fr 1fr"></div>
-            </div>
-          </div>
+          <div class="card"><div class="card-h"><span class="ch-t">Governance maturity</span><span class="ch-sub" id="ov-frac"></span></div>
+            <div class="card-pad"><div class="maturity"><div class="ring"><svg viewBox="0 0 120 120"><circle class="rtrack" cx="60" cy="60" r="50"/><circle class="rfill" id="ov-ring" cx="60" cy="60" r="50"/></svg><div class="ring-lbl"><b id="ov-pct" class="tnum">0%</b><span>complete</span></div></div>
+              <div class="mat-info"><div class="mat-level" id="ov-level">L1 · Assess</div><div class="mat-sub" id="ov-level-sub">Establishing your governance baseline.</div><div class="prog mat-track"><i id="ov-level-bar" style="width:0%"></i></div></div></div></div></div>
+          <div class="card"><div class="card-h"><span class="ch-t">At a glance</span></div><div class="card-pad"><div class="stat-strip" id="ov-stats" style="margin:0;grid-template-columns:1fr 1fr"></div></div></div>
         </div>
-
         <div class="grid-2">
-          <div class="card">
-            <div class="card-h"><span class="ch-t">Progress by framework</span></div>
-            <div class="card-pad"><div class="barlist" id="ov-fw-bars"></div></div>
-          </div>
-          <div class="card">
-            <div class="card-h"><span class="ch-t">Next best actions</span><span class="ch-sub" id="ov-nba-ct"></span></div>
-            <div class="card-pad"><div class="nba" id="ov-nba"></div></div>
-          </div>
+          <div class="card"><div class="card-h"><span class="ch-t">Progress by framework</span></div><div class="card-pad"><div class="barlist" id="ov-fw-bars"></div></div></div>
+          <div class="card"><div class="card-h"><span class="ch-t">Next best actions</span><span class="ch-sub" id="ov-nba-ct"></span></div><div class="card-pad"><div class="nba" id="ov-nba"></div></div></div>
         </div>
-
-        <div class="card" style="margin-top:16px">
-          <div class="card-h"><span class="ch-t">Completion by maturity level</span><span class="ch-sub">L1 foundations → L4 leading</span></div>
-          <div class="card-pad">
-            <div class="spark" id="ov-spark"></div>
-            <div class="spark-x"><span>L1</span><span>L2</span><span>L3</span><span>L4</span></div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:16px">
-          <div class="card-h"><span class="ch-t">Tasks by person</span><span class="ch-sub" id="ov-person-sub"></span></div>
-          <div class="card-pad"><div id="ov-person-bars"></div></div>
-        </div>
+        <div class="card" style="margin-top:16px"><div class="card-h"><span class="ch-t">Completion by maturity level</span><span class="ch-sub">L1 foundations → L4 leading</span></div><div class="card-pad"><div class="spark" id="ov-spark"></div><div class="spark-x"><span>L1</span><span>L2</span><span>L3</span><span>L4</span></div></div></div>
+        <div class="card" style="margin-top:16px"><div class="card-h"><span class="ch-t">Tasks by person</span><span class="ch-sub" id="ov-person-sub"></span></div><div class="card-pad"><div id="ov-person-bars"></div></div></div>
       </div>
     </section>
 
@@ -225,37 +183,20 @@
     <section class="screen" id="s-report">
       <div class="topbar">
         <button class="iconbtn sq rail-toggle" data-rail-toggle><svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
-        <div class="tb-titles">
-          <div class="tb-eyebrow">Insight</div>
-          <div class="tb-title">Executive Report</div>
-        </div>
-        <div class="tb-actions">
-          <button class="btn btn-ghost" id="btn-print"><svg class="ic" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg> Print / PDF</button>
-        </div>
+        <div class="tb-titles"><div class="tb-eyebrow">Insight</div><div class="tb-title">Executive Report</div></div>
+        <div class="tb-actions"><button class="btn btn-ghost" id="btn-print"><svg class="ic" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg> Print / PDF</button></div>
       </div>
       <div class="content">
         <div class="card card-pad" style="margin-bottom:16px">
           <div class="report-score">
-            <div class="ring"><svg viewBox="0 0 120 120"><circle class="rtrack" cx="60" cy="60" r="50"/><circle class="rfill" id="rp-ring" cx="60" cy="60" r="50"/></svg>
-              <div class="ring-lbl"><b id="rp-pct" class="tnum">0%</b><span id="rp-level-tag">L1</span></div></div>
-            <div class="mat-info" style="min-width:200px">
-              <div class="mat-level" id="rp-level">L1 · Assess</div>
-              <div class="mat-sub" id="rp-org">Save a company profile to personalise this report.</div>
-            </div>
+            <div class="ring"><svg viewBox="0 0 120 120"><circle class="rtrack" cx="60" cy="60" r="50"/><circle class="rfill" id="rp-ring" cx="60" cy="60" r="50"/></svg><div class="ring-lbl"><b id="rp-pct" class="tnum">0%</b><span id="rp-level-tag">L1</span></div></div>
+            <div class="mat-info" style="min-width:200px"><div class="mat-level" id="rp-level">L1 · Assess</div><div class="mat-sub" id="rp-org">Save a company profile to personalise this report.</div></div>
             <div class="stat-strip" id="rp-stats" style="margin:0;flex:1;min-width:230px;grid-template-columns:repeat(3,1fr)"></div>
           </div>
         </div>
         <div class="grid-2">
-          <div class="card">
-            <div class="card-h"><span class="ch-t">Maturity heatmap</span><span class="ch-sub">theme × level</span></div>
-            <div class="card-pad"><div class="heat" id="rp-heat"></div>
-              <div class="heat-legend"><span>Lower</span><div class="scale" id="rp-heat-scale"></div><span>Higher completion</span></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-h"><span class="ch-t">Framework coverage</span></div>
-            <div class="card-pad"><div class="barlist" id="rp-fw"></div></div>
-          </div>
+          <div class="card"><div class="card-h"><span class="ch-t">Maturity heatmap</span><span class="ch-sub">theme × level</span></div><div class="card-pad"><div class="heat" id="rp-heat"></div><div class="heat-legend"><span>Lower</span><div class="scale" id="rp-heat-scale"></div><span>Higher completion</span></div></div></div>
+          <div class="card"><div class="card-h"><span class="ch-t">Framework coverage</span></div><div class="card-pad"><div class="barlist" id="rp-fw"></div></div></div>
         </div>
       </div>
     </section>
@@ -266,12 +207,9 @@
 <!-- ════ UPLOAD MODAL ════ -->
 <div class="overlay" id="upload-modal">
   <div class="modal">
-    <div class="modal-h">
-      <div class="mi"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div>
-      <h2>Import task list</h2>
-    </div>
+    <div class="modal-h"><div class="mi"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div><h2>Import task list</h2></div>
     <div class="modal-b">
-      <p>Upload an <b>.xlsx</b>, <b>.xls</b> or <b>.csv</b> file to replace the built-in tasks. Columns are matched flexibly:</p>
+      <p>Upload an <b>.xlsx</b>, <b>.xls</b> or <b>.csv</b> file to replace the built-in tasks.</p>
       <div class="cols">
         <div class="cr"><span class="ck">priority</span><span class="cv">critical / high / medium / low</span></div>
         <div class="cr"><span class="ck">task</span><span class="cv">Task description</span></div>
@@ -279,11 +217,7 @@
         <div class="cr"><span class="ck">theme</span><span class="cv">Governance &amp; Leadership, …</span></div>
         <div class="cr"><span class="ck">framework</span><span class="cv">ISO-IEC 42001, NIST AI RMF, …</span></div>
       </div>
-      <div class="drop" id="drop">
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5M12 5v12"/></svg>
-        <p><b>Click to browse</b> or drop a file here</p>
-        <p class="sub">.xlsx · .xls · .csv</p>
-      </div>
+      <div class="drop" id="drop"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5M12 5v12"/></svg><p><b>Click to browse</b> or drop a file here</p><p class="sub">.xlsx · .xls · .csv</p></div>
       <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
       <div class="upload-status" id="upload-status"></div>
       <div class="modal-foot">
