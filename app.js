@@ -120,7 +120,7 @@ function rowHTML(i){
   const t=T[i],e=eff(i);
   const dur=calcDuration(e.startDate,e.endDate);
   return `<div class="trow p-${t[0]}${e.done?' done':''}" data-i="${i}">
-    <div class="chk${e.done?' on':''}" data-act="chk" title="Mark done">${e.done?'<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg>':''}</div>
+    <div class="chk${e.done?' on':''}" data-act="chk" title="Mark done" role="checkbox" aria-checked="${e.done?'true':'false'}" aria-label="Mark task done" tabindex="0">${e.done?'<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg>':''}</div>
     <div class="tmain">
       <div class="ttext">${esc(t[1])}</div>
       <div class="tmeta">
@@ -130,9 +130,9 @@ function rowHTML(i){
       </div>
       <div class="tfields">
         <div class="tf"><span class="tfl">Status</span>
-          <button class="status st-${e.status}" data-act="status" title="Click to cycle"><span class="sd"></span>${e.status.replace(/-/g,' ')}</button></div>
+          <button class="status st-${e.status}" data-act="status" title="Click to cycle" aria-label="Status: ${e.status.replace(/-/g,' ')}. Click to cycle"><span class="sd"></span>${e.status.replace(/-/g,' ')}</button></div>
         <div class="tf"><span class="tfl">Owner</span>
-          <div class="assignee" data-act="assignee" title="Reassign"><span class="avatar" style="background:${avaColor(e.assignee)}">${esc(initials(e.assignee)).toUpperCase()}</span><span class="an">${esc(e.assignee)}</span></div></div>
+          <div class="assignee" data-act="assignee" title="Reassign" role="button" aria-label="Assigned to ${esc(e.assignee)}. Click to reassign" tabindex="0"><span class="avatar" style="background:${avaColor(e.assignee)}">${esc(initials(e.assignee)).toUpperCase()}</span><span class="an">${esc(e.assignee)}</span></div></div>
         <div class="tf"><span class="tfl">Start</span>
           <input type="date" class="date-inp" data-act="start" value="${e.startDate}"></div>
         <div class="tf"><span class="tfl">Due <span class="dur" data-dur>${dur?'· '+dur:''}</span></span>
@@ -162,6 +162,13 @@ taskRoot.addEventListener('click',ev=>{
     s.status=next;s.done=next==='completed';state[i]=s;SS('kn_state',state);patchRow(i,row);return;
   }
   if(act==='assignee'){openAssignee(actEl,i);return;}
+});
+// keyboard operability for the focusable non-button controls (chk, assignee)
+taskRoot.addEventListener('keydown',ev=>{
+  if(ev.key!=='Enter'&&ev.key!==' ')return;
+  const actEl=ev.target.closest('[data-act=chk],[data-act=assignee]');
+  if(!actEl)return;
+  ev.preventDefault();actEl.click();
 });
 taskRoot.addEventListener('change',ev=>{
   const el=ev.target,act=el.dataset.act;if(!act)return;
