@@ -284,6 +284,7 @@ button{font-family:inherit}
   padding:var(--row-py) 16px;border-bottom:1px solid var(--border);position:relative;
   transition:background .12s}
 .trow:last-child{border-bottom:none}
+.trow{cursor:pointer}
 .trow:hover{background:var(--surface-2)}
 .trow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;opacity:.85}
 .trow.p-critical::before{background:var(--critical)}
@@ -301,10 +302,21 @@ button{font-family:inherit}
 .chk.on svg{width:11px;height:11px;stroke:var(--on-accent);fill:none;stroke-width:3}
 
 .tmain{min-width:0;display:flex;flex-direction:column;gap:8px}
-.ttext{font-size:var(--fs-row);line-height:1.5;color:var(--text);text-wrap:pretty}
+.trow-top{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.ttext{flex:1 1 260px;min-width:0;font-size:var(--fs-row);line-height:1.5;color:var(--text);text-wrap:pretty}
+.tquick{display:flex;align-items:center;gap:9px;flex-shrink:0;margin-left:auto}
+.tquick .due{font-size:11.5px;color:var(--muted);font-weight:500;white-space:nowrap}
+.tquick .due.overdue{color:var(--critical);font-weight:600}
+.t-caret{width:26px;height:26px;border:none;background:transparent;border-radius:var(--r-xs);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);
+  transition:transform .2s var(--ease),background .15s,color .15s}
+.t-caret:hover{background:var(--surface-3);color:var(--text)}
+.t-caret svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2}
+.trow.open .t-caret{transform:rotate(180deg)}
 .tmeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.select.sm{height:32px;font-size:12px;width:auto;min-width:150px}
 
-/* inline field strip — always visible */
+/* inline field strip — shown when a row is expanded */
 .tfields{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;
   padding-top:9px;margin-top:1px;border-top:1px solid var(--border)}
 .tf{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -313,14 +325,8 @@ button{font-family:inherit}
 .tfl .dur{text-transform:none;letter-spacing:0;color:var(--accent);font-weight:600}
 
 .status{align-self:flex-start}
-.assignee{display:inline-flex;align-items:center;gap:7px;cursor:pointer;border-radius:var(--r-sm);
-  padding:4px 9px 4px 4px;border:1px solid var(--border);background:var(--surface);transition:all .15s;max-width:170px}
-.assignee:hover{border-color:var(--border-2)}
 .avatar{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
   justify-content:center;font-size:9px;font-weight:700;color:#fff;letter-spacing:.02em}
-.assignee .an{font-size:12px;color:var(--text-2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.assignee select{border:none;background:transparent;font-family:inherit;font-size:12px;
-  color:var(--text);outline:none;cursor:pointer;border-radius:var(--r-xs);padding:2px;min-width:120px}
 
 .date-inp{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
   padding:5px 8px;color:var(--text);font-family:inherit;font-size:12px;outline:none;cursor:pointer;height:32px}
@@ -336,10 +342,10 @@ button{font-family:inherit}
 .empty{text-align:center;padding:72px 24px;color:var(--muted)}.empty svg{width:42px;height:42px;stroke:var(--border-2);fill:none;stroke-width:1.5;margin-bottom:14px}
 .empty h3{font-size:17px;color:var(--text);font-weight:650;margin-bottom:6px}
 .empty p{font-size:13px;max-width:340px;margin:0 auto;line-height:1.6}
-.loadmore{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
-  margin-top:16px;padding:14px 16px;background:var(--surface-2);border:1px dashed var(--border-2);
-  border-radius:var(--r-md);font-size:12.5px;color:var(--text-2)}
-.loadmore b{color:var(--text);font-weight:700}
+.tlist-more{display:block;width:100%;padding:11px 16px;border:none;border-top:1px solid var(--border);
+  background:var(--surface-2);color:var(--accent);font-family:inherit;font-size:12.5px;font-weight:600;
+  cursor:pointer;text-align:center;transition:background .15s}
+.tlist-more:hover{background:var(--surface-3)}
 
 /* ══════════ OVERVIEW ══════════ */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}

@@ -2,7 +2,7 @@
    KneuraLens — application logic
    Data model preserved verbatim: T[i] = [priority, text, level, theme, framework]
    state[i] = {done,status,assignee,startDate,endDate,notes}
-   localStorage: kn_state · kn_customer · kn_theme · kn_screen · kn_accent · kn_density
+   localStorage: kn_state · kn_customer · kn_tasks · kn_theme · kn_screen · kn_accent · kn_density
 ════════════════════════════════════════════════════════════ */
 (function(){
 'use strict';
@@ -35,11 +35,15 @@ const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f
 const RING=Math.round(2*Math.PI*50);
 
 function calcDuration(s,e){if(!s||!e)return '';const d=Math.round((new Date(e)-new Date(s))/86400000);return d<0?'invalid':d===0?'same day':d===1?'1 day':d+' days';}
+const todayISO=()=>new Date().toISOString().slice(0,10);
+function fmtDay(iso){if(!iso)return '';const d=new Date(iso+'T00:00:00');return isNaN(d)?'':d.toLocaleDateString(undefined,{day:'numeric',month:'short'});}
 function defStatus(p){return p==='critical'?'initiated':p==='high'?'in-progress':'not-started';}
 function defPerson(i){const team=getTeam();return team[i%team.length];}
-function defStartDate(p,i){const b=new Date('2025-02-01');const o={critical:0,high:14,medium:45,low:90}[p]||0;b.setDate(b.getDate()+o+(i%4)*7);return b.toISOString().slice(0,10);}
+function defStartDate(p,i){const b=new Date();const o={critical:0,high:14,medium:45,low:90}[p]||0;b.setDate(b.getDate()+o+(i%4)*7);return b.toISOString().slice(0,10);}
 function defEndDate(s,p){const d=new Date(s);const dur={critical:30,high:45,medium:90,low:180}[p]||60;d.setDate(d.getDate()+dur);return d.toISOString().slice(0,10);}
-function getTeam(){const c=LS('kn_customer')||{};if(c.team&&c.team.trim())return c.team.split(',').map(x=>x.trim()).filter(Boolean);return PERSONS_POOL;}
+let _team=null;
+function invalidateTeam(){_team=null;}
+function getTeam(){if(_team)return _team;const c=LS('kn_customer')||{};_team=(c.team&&c.team.trim())?c.team.split(',').map(x=>x.trim()).filter(Boolean):PERSONS_POOL;if(!_team.length)_team=PERSONS_POOL;return _team;}
 function eff(i){const t=T[i],s=state[i]||{};const start=s.startDate||defStartDate(t[0],i);return{done:!!s.done,status:s.status||defStatus(t[0]),assignee:s.assignee||defPerson(i),startDate:start,endDate:s.endDate||defEndDate(start,t[0]),notes:s.notes||''};}
 function isDone(i){const s=state[i]||{};return s.done||s.status==='completed';}
 function initials(n){const p=n.trim().split(/\s+/);return((p[0]||'')[0]||'')+((p[1]||'')[0]||'');}
@@ -66,7 +70,7 @@ function filtered(){
     if(l&&t[2]!==l)continue;
     if(fw&&t[4]!==fw)continue;
     if(th&&!t[3].includes(th))continue;
-    if(ql&&!t[1].toLowerCase().includes(ql))continue;
+    if(ql&&!(t[1]+' '+t[3]+' '+t[4]).toLowerCase().includes(ql))continue;
     if(st){const s=state[i]||{};if((s.status||defStatus(t[0]))!==st)continue;}
     out.push(i);
   }
@@ -75,7 +79,10 @@ function filtered(){
 
 // ════ TASKS RENDER ════
 const taskRoot=$('#task-root');
-let renderCap=250;
+const SEC_CAP=100;                 // rows shown per priority section before "Show all"
+const openRows=new Set();          // expanded task rows (survive row patches)
+const collapsedSecs=new Set();     // collapsed priority sections (survive re-renders)
+let secAll=new Set();              // sections the user expanded past SEC_CAP
 function renderTasks(){
   const idxs=filtered();
   updateTaskStats(idxs);
@@ -91,63 +98,72 @@ function renderTasks(){
   const groups={critical:[],high:[],medium:[],low:[]};
   idxs.forEach(i=>groups[T[i][0]].push(i));
 
-  const capped=idxs.length>renderCap;
-  let budget=renderCap;
   let html='';
   PRIORITIES.forEach(pri=>{
-    const arr=groups[pri];if(!arr.length||budget<=0)return;
-    const slice=arr.slice(0,budget);budget-=slice.length;
+    const arr=groups[pri];if(!arr.length)return;
+    const slice=secAll.has(pri)?arr:arr.slice(0,SEC_CAP);
     html+=`<div class="tasksec">
-      <div class="tasksec-h" data-sec="${pri}">
+      <div class="tasksec-h${collapsedSecs.has(pri)?' collapsed':''}" data-sec="${pri}">
         <svg class="caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
         <span class="dot dot-${pri}"></span>
         <span class="tlabel">${pri}</span>
         <span class="tsla">${SLA[pri]}</span>
         <span class="tcount tnum">${arr.length}</span>
       </div>
-      <div class="tasklist">${slice.map(rowHTML).join('')}</div>
+      <div class="tasklist">${slice.map(rowHTML).join('')}${arr.length>slice.length?`<button class="tlist-more" data-secall="${pri}">Show all ${arr.length} ${pri} tasks</button>`:''}</div>
     </div>`;
   });
-  if(capped){
-    html+=`<div class="loadmore"><span>Showing first <b class="tnum">${renderCap}</b> of <b class="tnum">${idxs.length}</b> tasks — refine with filters for focus.</span>
-      <button class="btn btn-ghost sm" id="btn-loadall">Load all ${idxs.length}</button></div>`;
-  }
   taskRoot.innerHTML=html;
-  const la=$('#btn-loadall');if(la)la.addEventListener('click',()=>{renderCap=Infinity;renderTasks();});
 }
 
 function rowHTML(i){
   const t=T[i],e=eff(i);
-  const dur=calcDuration(e.startDate,e.endDate);
-  return `<div class="trow p-${t[0]}${e.done?' done':''}" data-i="${i}">
-    <div class="chk${e.done?' on':''}" data-act="chk" title="Mark done" role="checkbox" aria-checked="${e.done?'true':'false'}" aria-label="Mark task done" tabindex="0">${e.done?'<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg>':''}</div>
-    <div class="tmain">
-      <div class="ttext">${esc(t[1])}</div>
-      <div class="tmeta">
-        <span class="chip chip-accent" title="Framework">${esc(FW_SHORT[t[4]]||t[4])}</span>
-        <span class="chip chip-soft" title="Maturity level">${t[2]}</span>
-        <span class="chip chip-soft" title="${esc(t[3])}">${esc(THEME_SHORT[t[3]]||t[3])}</span>
-      </div>
-      <div class="tfields">
-        <div class="tf"><span class="tfl">Status</span>
-          <button class="status st-${e.status}" data-act="status" title="Click to cycle" aria-label="Status: ${e.status.replace(/-/g,' ')}. Click to cycle"><span class="sd"></span>${e.status.replace(/-/g,' ')}</button></div>
+  const open=openRows.has(i);
+  const overdue=!e.done&&e.endDate&&e.endDate<todayISO();
+  let fields='';
+  if(open){
+    const dur=calcDuration(e.startDate,e.endDate);
+    const team=getTeam();
+    const owners=(team.includes(e.assignee)?team:[e.assignee,...team]);
+    fields=`<div class="tfields">
         <div class="tf"><span class="tfl">Owner</span>
-          <div class="assignee" data-act="assignee" title="Reassign" role="button" aria-label="Assigned to ${esc(e.assignee)}. Click to reassign" tabindex="0"><span class="avatar" style="background:${avaColor(e.assignee)}">${esc(initials(e.assignee)).toUpperCase()}</span><span class="an">${esc(e.assignee)}</span></div></div>
+          <select class="select sm" data-act="assignee" aria-label="Owner">${owners.map(p=>`<option${p===e.assignee?' selected':''}>${esc(p)}</option>`).join('')}</select></div>
         <div class="tf"><span class="tfl">Start</span>
           <input type="date" class="date-inp" data-act="start" value="${e.startDate}"></div>
         <div class="tf"><span class="tfl">Due <span class="dur" data-dur>${dur?'· '+dur:''}</span></span>
           <input type="date" class="date-inp" data-act="end" value="${e.endDate}"></div>
         <div class="tf grow"><span class="tfl">Notes</span>
           <input type="text" class="tnotes" data-act="notes" placeholder="Add a note…" value="${esc(e.notes)}"></div>
+      </div>`;
+  }
+  return `<div class="trow p-${t[0]}${e.done?' done':''}${open?' open':''}" data-i="${i}">
+    <div class="chk${e.done?' on':''}" data-act="chk" title="Mark done" role="checkbox" aria-checked="${e.done?'true':'false'}" aria-label="Mark task done" tabindex="0">${e.done?'<svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg>':''}</div>
+    <div class="tmain">
+      <div class="trow-top">
+        <div class="ttext">${esc(t[1])}</div>
+        <div class="tquick">
+          <button class="status st-${e.status}" data-act="status" title="Click to cycle" aria-label="Status: ${e.status.replace(/-/g,' ')}. Click to cycle"><span class="sd"></span>${e.status.replace(/-/g,' ')}</button>
+          <span class="avatar" title="Owner: ${esc(e.assignee)}" style="background:${avaColor(e.assignee)}">${esc(initials(e.assignee)).toUpperCase()}</span>
+          <span class="due tnum${overdue?' overdue':''}" title="${overdue?'Overdue — due':'Due'} ${e.endDate}">${fmtDay(e.endDate)}</span>
+          <button class="t-caret" data-act="toggle" aria-expanded="${open}" aria-label="${open?'Hide':'Edit'} details"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
       </div>
+      <div class="tmeta">
+        <span class="chip chip-accent" title="Framework">${esc(FW_SHORT[t[4]]||t[4])}</span>
+        <span class="chip chip-soft" title="Maturity level">${t[2]}</span>
+        <span class="chip chip-soft" title="${esc(t[3])}">${esc(THEME_SHORT[t[3]]||t[3])}</span>
+      </div>
+      ${fields}
     </div>
   </div>`;
 }
 
 // delegation
 taskRoot.addEventListener('click',ev=>{
+  const more=ev.target.closest('[data-secall]');
+  if(more){secAll.add(more.dataset.secall);renderTasks();return;}
   const sec=ev.target.closest('.tasksec-h');
-  if(sec){sec.classList.toggle('collapsed');return;}
+  if(sec){const p=sec.dataset.sec;collapsedSecs.has(p)?collapsedSecs.delete(p):collapsedSecs.add(p);sec.classList.toggle('collapsed');return;}
   const row=ev.target.closest('.trow');if(!row)return;
   const i=+row.dataset.i;
   const actEl=ev.target.closest('[data-act]');
@@ -161,12 +177,15 @@ taskRoot.addEventListener('click',ev=>{
     const next=STATUSES[(STATUSES.indexOf(cur)+1)%STATUSES.length];
     s.status=next;s.done=next==='completed';state[i]=s;SS('kn_state',state);patchRow(i,row);return;
   }
-  if(act==='assignee'){openAssignee(actEl,i);return;}
+  if(act==='toggle'||(!act&&!ev.target.closest('input,select,button,a'))){
+    openRows.has(i)?openRows.delete(i):openRows.add(i);
+    replaceRow(i,row);return;
+  }
 });
-// keyboard operability for the focusable non-button controls (chk, assignee)
+// keyboard operability for the checkbox (a focusable div)
 taskRoot.addEventListener('keydown',ev=>{
   if(ev.key!=='Enter'&&ev.key!==' ')return;
-  const actEl=ev.target.closest('[data-act=chk],[data-act=assignee]');
+  const actEl=ev.target.closest('[data-act=chk]');
   if(!actEl)return;
   ev.preventDefault();actEl.click();
 });
@@ -176,26 +195,23 @@ taskRoot.addEventListener('change',ev=>{
   if(act==='start'||act==='end'){
     s[act==='start'?'startDate':'endDate']=el.value;state[i]=s;SS('kn_state',state);
     const start=row.querySelector('[data-act=start]').value,end=row.querySelector('[data-act=end]').value;
-    const d=calcDuration(start,end);const dl=row.querySelector('[data-dur]');if(dl)dl.textContent=d?'Duration · '+d:'';
+    const d=calcDuration(start,end);const dl=row.querySelector('[data-dur]');if(dl)dl.textContent=d?'· '+d:'';
+    if(act==='end')replaceRow(i,row);
   }
+  if(act==='assignee'){s.assignee=el.value;state[i]=s;SS('kn_state',state);replaceRow(i,row);}
 });
 taskRoot.addEventListener('input',ev=>{
   if(ev.target.dataset.act!=='notes')return;
   const row=ev.target.closest('.trow');const i=+row.dataset.i;const s=state[i]||{};
   s.notes=ev.target.value;state[i]=s;SS('kn_state',state);
 });
-function openAssignee(el,i){
-  const team=getTeam();const cur=eff(i).assignee;
-  const sel=document.createElement('select');
-  team.forEach(p=>{const o=document.createElement('option');o.value=o.textContent=p;if(p===cur)o.selected=true;sel.appendChild(o)});
-  el.innerHTML='';el.appendChild(sel);sel.focus();
-  const close=()=>{const s=state[i]||{};s.assignee=sel.value;state[i]=s;SS('kn_state',state);renderTasks();};
-  sel.addEventListener('change',close);sel.addEventListener('blur',()=>renderTasks());
-}
 
-function patchRow(i,oldRow){
+function replaceRow(i,oldRow){
   const tmp=document.createElement('div');tmp.innerHTML=rowHTML(i);
   oldRow.replaceWith(tmp.firstChild);
+}
+function patchRow(i,oldRow){
+  replaceRow(i,oldRow);
   const idxs=filtered();updateTaskStats(idxs);$('#nav-tasks-ct').textContent=idxs.length;syncBadges();
 }
 
@@ -203,13 +219,18 @@ function updateTaskStats(idxs){
   const total=idxs.length;
   const done=idxs.filter(isDone).length;
   const pct=total?Math.round(done/total*100):0;
-  const cnt={critical:0,high:0,medium:0,low:0};
-  idxs.forEach(i=>cnt[T[i][0]]++);
+  const today=todayISO();
+  let crit=0,overdue=0;
+  idxs.forEach(i=>{
+    if(T[i][0]==='critical')crit++;
+    const e=eff(i);if(!e.done&&e.endDate&&e.endDate<today)overdue++;
+  });
   $('#task-stats').innerHTML=`
     <div class="stat"><div class="sv c-acc tnum">${pct}%</div><div class="sk">Complete</div><div class="prog" style="margin-top:10px"><i style="width:${pct}%"></i></div></div>
     <div class="stat"><div class="sv tnum">${total}</div><div class="sk">Visible tasks</div></div>
     <div class="stat"><div class="sv tnum">${done}</div><div class="sk">Done</div></div>
-    <div class="stat"><div class="sv c-crit tnum">${cnt.critical}</div><div class="sk">Critical</div></div>`;
+    <div class="stat"><div class="sv c-crit tnum">${overdue}</div><div class="sk">Overdue</div></div>
+    <div class="stat"><div class="sv c-crit tnum">${crit}</div><div class="sk">Critical</div></div>`;
 }
 
 // ════ OVERVIEW ════
@@ -330,7 +351,7 @@ function saveProfile(){
   const g=id=>$('#c-'+id).value;
   const c={name:g('name'),industry:g('industry'),size:g('size'),region:g('region'),contact:g('contact'),email:g('email'),team:g('team'),notes:g('notes'),
     frameworks:getChecked('fw'),priorities:getChecked('pri'),levels:getChecked('lvl'),themes:getChecked('th')};
-  SS('kn_customer',c);
+  SS('kn_customer',c);invalidateTeam();
   const n=$('#saved-note');n.classList.add('show');setTimeout(()=>n.classList.remove('show'),2400);
   renderTasks();syncBadges();navigateTo('tasks');
 }
@@ -344,7 +365,10 @@ function navigateTo(screen){
   if(screen==='report')renderReport();
   closeRail();window.scrollTo({top:0});
 }
-$$('.nav-link').forEach(l=>l.addEventListener('click',()=>navigateTo(l.dataset.screen)));
+$$('.nav-link').forEach(l=>{
+  l.addEventListener('click',()=>navigateTo(l.dataset.screen));
+  l.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();navigateTo(l.dataset.screen);}});
+});
 $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>navigateTo(b.dataset.goto)));
 document.addEventListener('click',e=>{const g=e.target.closest('[data-goto-task],[data-goto-tasks]');if(g)navigateTo('tasks');});
 function syncBadges(){
@@ -367,13 +391,11 @@ $('#f-l').addEventListener('change',e=>{filters.l=e.target.value;recap();});
 $('#f-fw').addEventListener('change',e=>{filters.fw=e.target.value;recap();});
 $('#f-th').addEventListener('change',e=>{filters.th=e.target.value;recap();});
 $('#f-st').addEventListener('change',e=>{filters.st=e.target.value;recap();});
-function recap(){renderCap=250;renderTasks();}
+function recap(){secAll=new Set();renderTasks();}
 $('#btn-reset').addEventListener('click',()=>{
-  if(!confirm('Reset all task progress (status, dates, assignees, notes)?'))return;
-  state={};SS('kn_state',state);
   filters={q:'',p:'',l:'',fw:'',th:'',st:''};
   $('#f-q').value='';['f-p','f-l','f-fw','f-th','f-st'].forEach(id=>$('#'+id).value='');
-  renderTasks();syncBadges();
+  recap();
 });
 
 // ════ EXCEL / CSV IMPORT (logic preserved) ════
@@ -393,8 +415,15 @@ drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
 drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');const f=e.dataTransfer.files[0];if(f)processFile(f);});
 fileInput.addEventListener('change',()=>{if(fileInput.files[0])processFile(fileInput.files[0]);});
 $('#btn-restore').addEventListener('click',()=>{
+  if(!confirm('Replace the current task list with the built-in defaults? This clears all task progress.'))return;
   T.length=0;DEFAULT_TASKS.forEach(t=>T.push(t));state={};SS('kn_state',state);
+  try{localStorage.removeItem('kn_tasks')}catch(e){}
   closeUpload();$('#upbadge').classList.remove('show');renderTasks();syncBadges();
+});
+$('#btn-reset-progress').addEventListener('click',()=>{
+  if(!confirm('Reset all task progress (status, dates, owners, notes)? The task list itself is kept.'))return;
+  state={};SS('kn_state',state);
+  closeUpload();renderTasks();syncBadges();
 });
 function processFile(file){
   setStatus('Reading…','var(--accent)');
@@ -402,9 +431,18 @@ function processFile(file){
   if(ext==='csv'){const r=new FileReader();r.onload=e=>parseCSV(e.target.result);r.readAsText(file);}
   else{loadSheetJS(()=>{const r=new FileReader();r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];parseRows(XLSX.utils.sheet_to_json(ws,{defval:''}));}catch(err){setStatus('Error: '+err.message,'var(--critical)');}};r.readAsArrayBuffer(file);});}
 }
+function splitCSV(line){
+  const out=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){const ch=line[i];
+    if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+    else if(ch==='"')q=true;
+    else if(ch===','){out.push(cur);cur='';}
+    else cur+=ch;}
+  out.push(cur);return out;
+}
 function parseCSV(text){const lines=text.split(/\r?\n/).filter(l=>l.trim());if(!lines.length){setStatus('Empty file','var(--critical)');return;}
-  const headers=lines[0].split(',').map(h=>h.trim().replace(/['"]/g,'').toLowerCase());
-  const rows=lines.slice(1).map(line=>{const vals=line.match(/(".*?"|[^,]+)/g)||[];const o={};headers.forEach((h,i)=>o[h]=(vals[i]||'').replace(/^"|"$/g,'').trim());return o;});
+  const headers=splitCSV(lines[0]).map(h=>h.trim().replace(/['"]/g,'').toLowerCase());
+  const rows=lines.slice(1).map(line=>{const vals=splitCSV(line);const o={};headers.forEach((h,i)=>o[h]=(vals[i]||'').trim());return o;});
   parseRows(rows);}
 function parseRows(rows){
   const newTasks=[];let skipped=0;
@@ -421,13 +459,14 @@ function parseRows(rows){
   });
   if(!newTasks.length){setStatus('No valid tasks found — check your column names. ('+skipped+' rows skipped)','var(--critical)');return;}
   T.length=0;newTasks.forEach(t=>T.push(t));state={};SS('kn_state',state);
+  SS('kn_tasks',newTasks); // persist the import so a reload keeps it
   setStatus('✓ Loaded '+newTasks.length+' tasks'+(skipped?' ('+skipped+' skipped)':''),'var(--medium)');
   setTimeout(()=>{closeUpload();const b=$('#upbadge');$('#upbadge-txt').textContent=newTasks.length+' custom tasks';b.classList.add('show');renderTasks();syncBadges();},900);
 }
 
 // ════ PROFILE buttons ════
 $('#btn-save-profile').addEventListener('click',saveProfile);
-$('#btn-clear-profile').addEventListener('click',()=>{if(!confirm('Clear the company profile?'))return;localStorage.removeItem('kn_customer');loadProfile();renderTasks();syncBadges();});
+$('#btn-clear-profile').addEventListener('click',()=>{if(!confirm('Clear the company profile?'))return;localStorage.removeItem('kn_customer');invalidateTeam();loadProfile();renderTasks();syncBadges();});
 $('#btn-print').addEventListener('click',()=>window.print());
 
 // ════ THEME / SETTINGS ════
@@ -438,7 +477,7 @@ function applyTheme(t){root.setAttribute('data-theme',t);$('#theme-ic').innerHTM
 function applyAccent(a){root.setAttribute('data-accent',a);localStorage.setItem('kn_accent',a);$$('#accent-swatches .sw').forEach(s=>s.classList.toggle('on',s.dataset.accent===a));}
 function applyDensity(d){root.setAttribute('data-density',d);localStorage.setItem('kn_density',d);syncSeg('#density-seg','data-density',d);}
 function syncSeg(sel,attr,val){$$(sel+' button').forEach(b=>b.classList.toggle('on',b.getAttribute(attr)===val));}
-applyTheme(localStorage.getItem('kn_theme')||'light');
+applyTheme(localStorage.getItem('kn_theme')||(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
 applyAccent(localStorage.getItem('kn_accent')||'blue');
 applyDensity(localStorage.getItem('kn_density')||'default');
 $('#theme-btn').addEventListener('click',()=>applyTheme(root.getAttribute('data-theme')==='dark'?'light':'dark'));
@@ -458,7 +497,16 @@ $$('[data-rail-toggle]').forEach(b=>b.addEventListener('click',openRail));
 scrim.addEventListener('click',closeRail);
 
 // ════ INIT ════
+(function restoreCustomTasks(){
+  const ct=LS('kn_tasks');
+  if(Array.isArray(ct)&&ct.length){
+    T.length=0;ct.forEach(t=>T.push(t));
+    $('#upbadge-txt').textContent=ct.length+' custom tasks';
+    $('#upbadge').classList.add('show');
+  }
+})();
 buildFilters();buildChoices();loadProfile();renderTasks();syncBadges();
-navigateTo((localStorage.getItem('kn_screen')||'tasks').replace('overview','overview'));
+const savedScreen=localStorage.getItem('kn_screen');
+navigateTo(['profile','tasks','overview','report'].includes(savedScreen)?savedScreen:'tasks');
 
 })();
