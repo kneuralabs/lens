@@ -41,9 +41,12 @@ function defStatus(p){return p==='critical'?'initiated':p==='high'?'in-progress'
 function defPerson(i){const team=getTeam();return team[i%team.length];}
 function defStartDate(p,i){const b=new Date();const o={critical:0,high:14,medium:45,low:90}[p]||0;b.setDate(b.getDate()+o+(i%4)*7);return b.toISOString().slice(0,10);}
 function defEndDate(s,p){const d=new Date(s);const dur={critical:30,high:45,medium:90,low:180}[p]||60;d.setDate(d.getDate()+dur);return d.toISOString().slice(0,10);}
-let _team=null;
-function invalidateTeam(){_team=null;}
-function getTeam(){if(_team)return _team;const c=LS('kn_customer')||{};_team=(c.team&&c.team.trim())?c.team.split(',').map(x=>x.trim()).filter(Boolean):PERSONS_POOL;if(!_team.length)_team=PERSONS_POOL;return _team;}
+let _customer=null,_team=null;
+// Cache the parsed company profile; invalidate on save/clear to avoid re-reading
+// localStorage (and re-parsing JSON) on every filter keystroke and chart render.
+function getCustomer(){return _customer||(_customer=LS('kn_customer')||{});}
+function invalidateCustomer(){_customer=null;_team=null;}
+function getTeam(){if(_team)return _team;const c=getCustomer();_team=(c.team&&c.team.trim())?c.team.split(',').map(x=>x.trim()).filter(Boolean):PERSONS_POOL;if(!_team.length)_team=PERSONS_POOL;return _team;}
 function eff(i){const t=T[i],s=state[i]||{};const start=s.startDate||defStartDate(t[0],i);return{done:!!s.done,status:s.status||defStatus(t[0]),assignee:s.assignee||defPerson(i),startDate:start,endDate:s.endDate||defEndDate(start,t[0]),notes:s.notes||''};}
 function isDone(i){const s=state[i]||{};return s.done||s.status==='completed';}
 function initials(n){const p=n.trim().split(/\s+/);return((p[0]||'')[0]||'')+((p[1]||'')[0]||'');}
@@ -53,7 +56,7 @@ function matLevel(pct){if(pct>=90)return['L4','Leading','Governance embedded as 
 // ─── filtering (logic preserved) ───
 function filtered(){
   const{q,p,l,fw,th,st}=filters;
-  const c=LS('kn_customer')||{};
+  const c=getCustomer();
   const cpFW=c.frameworks&&c.frameworks.length?c.frameworks:null;
   const cpPRI=c.priorities&&c.priorities.length?c.priorities:null;
   const cpLVL=c.levels&&c.levels.length?c.levels:null;
@@ -75,6 +78,31 @@ function filtered(){
     out.push(i);
   }
   return out;
+}
+
+// ─── aggregation helpers (shared by tasks / overview / report) ───
+const pctOf=(d,t)=>t?Math.round(d/t*100):0;
+// Tally {t:total,d:done} buckets keyed by keyFn(task,index); null keys are skipped.
+// Buckets are created on demand, so unexpected key values (e.g. an imported task
+// with a level outside L1–L4) can never throw.
+function tally(keyFn){
+  const m={};
+  for(let i=0;i<T.length;i++){
+    const k=keyFn(T[i],i);if(k==null)continue;
+    const b=m[k]||(m[k]={t:0,d:0});b.t++;if(isDone(i))b.d++;
+  }
+  return m;
+}
+// Overall programme progress across the full task set.
+function progressOf(){
+  let done=0,critOpen=0;
+  for(let i=0;i<T.length;i++){if(isDone(i))done++;else if(T[i][0]==='critical')critOpen++;}
+  const total=T.length;
+  return{total,done,critOpen,pct:pctOf(done,total),remaining:total-done};
+}
+// One framework/coverage progress bar (overview + report share this markup).
+function barRowHTML(label,pct,countLabel){
+  return `<div class="barrow"><div class="bm"><span class="bl">${esc(label)}</span><span class="bc tnum">${countLabel}</span></div><div class="bartrack"><div class="barfill" style="width:0;background:var(--accent)" data-w="${pct}"></div></div></div>`;
 }
 
 // ════ TASKS RENDER ════
@@ -129,9 +157,9 @@ function rowHTML(i){
         <div class="tf"><span class="tfl">Owner</span>
           <select class="select sm" data-act="assignee" aria-label="Owner">${owners.map(p=>`<option${p===e.assignee?' selected':''}>${esc(p)}</option>`).join('')}</select></div>
         <div class="tf"><span class="tfl">Start</span>
-          <input type="date" class="date-inp" data-act="start" value="${e.startDate}"></div>
+          <input type="date" class="date-inp" data-act="start" value="${esc(e.startDate)}"></div>
         <div class="tf"><span class="tfl">Due <span class="dur" data-dur>${dur?'· '+dur:''}</span></span>
-          <input type="date" class="date-inp" data-act="end" value="${e.endDate}"></div>
+          <input type="date" class="date-inp" data-act="end" value="${esc(e.endDate)}"></div>
         <div class="tf grow"><span class="tfl">Notes</span>
           <input type="text" class="tnotes" data-act="notes" placeholder="Add a note…" value="${esc(e.notes)}"></div>
       </div>`;
@@ -235,9 +263,7 @@ function updateTaskStats(idxs){
 
 // ════ OVERVIEW ════
 function renderOverview(){
-  const total=T.length;let done=0,critOpen=0;
-  for(let i=0;i<total;i++){if(isDone(i))done++;else if(T[i][0]==='critical')critOpen++;}
-  const pct=total?Math.round(done/total*100):0;
+  const{total,done,critOpen,pct,remaining}=progressOf();
   const[lv,name,sub]=matLevel(pct);
   setTimeout(()=>{$('#ov-ring').style.strokeDashoffset=(RING-pct/100*RING).toFixed(1);$('#ov-level-bar').style.width=pct+'%';},60);
   $('#ov-pct').textContent=pct+'%';
@@ -248,12 +274,11 @@ function renderOverview(){
     <div class="stat"><div class="sv tnum">${total}</div><div class="sk">Total tasks</div></div>
     <div class="stat"><div class="sv c-crit tnum">${critOpen}</div><div class="sk">Critical open</div></div>
     <div class="stat"><div class="sv tnum">${done}</div><div class="sk">Completed</div></div>
-    <div class="stat"><div class="sv tnum">${total-done}</div><div class="sk">Remaining</div></div>`;
+    <div class="stat"><div class="sv tnum">${remaining}</div><div class="sk">Remaining</div></div>`;
 
   // framework bars
-  const fwMap={};T.forEach((t,i)=>{(fwMap[t[4]]=fwMap[t[4]]||{t:0,d:0}).t++;if(isDone(i))fwMap[t[4]].d++;});
-  $('#ov-fw-bars').innerHTML=FRAMEWORKS.map(fw=>{const d=fwMap[fw]||{t:0,d:0};const p=d.t?Math.round(d.d/d.t*100):0;
-    return `<div class="barrow"><div class="bm"><span class="bl">${esc(fw)}</span><span class="bc tnum">${p}%</span></div><div class="bartrack"><div class="barfill" style="width:0;background:var(--accent)" data-w="${p}"></div></div></div>`;}).join('');
+  const fwMap=tally(t=>t[4]);
+  $('#ov-fw-bars').innerHTML=FRAMEWORKS.map(fw=>{const d=fwMap[fw]||{t:0,d:0},p=pctOf(d.d,d.t);return barRowHTML(fw,p,p+'%');}).join('');
   animateBars('#ov-fw-bars');
 
   // NBA
@@ -264,8 +289,8 @@ function renderOverview(){
   $('#ov-nba').innerHTML=top.length?top.map((i,n)=>`<div class="nba-item" data-goto-task="${i}"><span class="nba-rank">${n+1}</span><span class="nba-txt">${esc(T[i][1])}</span><span class="sev sev-${T[i][0]}">${T[i][0]}</span></div>`).join(''):'<div style="padding:18px 0;color:var(--medium);font-weight:600">All tasks complete 🎉</div>';
 
   // spark by level
-  const lvMap={};LEVELS.forEach(l=>lvMap[l]={t:0,d:0});T.forEach((t,i)=>{lvMap[t[2]].t++;if(isDone(i))lvMap[t[2]].d++;});
-  const sparkPct=LEVELS.map(l=>lvMap[l].t?Math.round(lvMap[l].d/lvMap[l].t*100):0);
+  const lvMap=tally(t=>t[2]);
+  const sparkPct=LEVELS.map(l=>{const d=lvMap[l]||{t:0,d:0};return pctOf(d.d,d.t);});
   const lead=sparkPct.indexOf(Math.max(...sparkPct));
   $('#ov-spark').innerHTML=sparkPct.map((p,n)=>`<div class="sb${n===lead&&p>0?' lead':''}" style="height:0" data-h="${Math.max(p,3)}" title="${LEVELS[n]} · ${p}%"></div>`).join('');
   setTimeout(()=>$$('#ov-spark .sb').forEach(b=>b.style.height=b.dataset.h+'%'),60);
@@ -274,9 +299,8 @@ function renderOverview(){
 function animateBars(sel){setTimeout(()=>$$(sel+' .barfill').forEach(b=>b.style.width=b.dataset.w+'%'),60);}
 
 function renderPersonChart(){
-  const personMap={};
-  for(let i=0;i<T.length;i++){const a=eff(i).assignee;if(!personMap[a])personMap[a]={t:0,d:0};personMap[a].t++;if(isDone(i))personMap[a].d++;}
-  const sorted=Object.entries(personMap).filter(([,v])=>v.t>0).sort((a,b)=>b[1].t-a[1].t);
+  const personMap=tally((t,i)=>eff(i).assignee);
+  const sorted=Object.entries(personMap).sort((a,b)=>b[1].t-a[1].t);
   const maxT=sorted.length?sorted[0][1].t:1;
   $('#ov-person-sub').textContent=sorted.length+' people';
   $('#ov-person-bars').innerHTML=sorted.map(([name,v])=>{
@@ -293,13 +317,11 @@ function renderPersonChart(){
 
 // ════ REPORT ════
 function renderReport(){
-  const total=T.length;let done=0,critOpen=0;
-  for(let i=0;i<total;i++){if(isDone(i))done++;else if(T[i][0]==='critical')critOpen++;}
-  const pct=total?Math.round(done/total*100):0;const[lv,name]=matLevel(pct);
+  const{total,done,critOpen,pct}=progressOf();const[lv,name]=matLevel(pct);
   setTimeout(()=>$('#rp-ring').style.strokeDashoffset=(RING-pct/100*RING).toFixed(1),60);
   $('#rp-pct').textContent=pct+'%';$('#rp-level-tag').textContent=lv;
   $('#rp-level').textContent=lv+' · '+name;
-  const c=LS('kn_customer')||{};
+  const c=getCustomer();
   $('#rp-org').textContent=c.name?`${c.name}${c.industry?' · '+c.industry:''}${c.region?' · '+c.region:''}`:'Save a company profile to personalise this report.';
   $('#rp-stats').innerHTML=`
     <div class="stat"><div class="sv tnum">${total}</div><div class="sk">Tasks</div></div>
@@ -307,7 +329,7 @@ function renderReport(){
     <div class="stat"><div class="sv c-crit tnum">${critOpen}</div><div class="sk">Critical open</div></div>`;
 
   // heatmap theme×level
-  const map={};T.forEach((t,i)=>{const k=t[3]+'|'+t[2];(map[k]=map[k]||{t:0,d:0}).t++;if(isDone(i))map[k].d++;});
+  const map=tally(t=>t[3]+'|'+t[2]);
   const heat=$('#rp-heat');
   heat.style.gridTemplateColumns='118px repeat(4,1fr)';
   let h='<div class="heat-corner"></div>'+LEVELS.map(l=>`<div class="heat-colh">${l}</div>`).join('');
@@ -321,9 +343,8 @@ function renderReport(){
   $('#rp-heat-scale').innerHTML=[6,30,55,80].map(p=>`<i style="background:color-mix(in srgb,var(--accent) ${p}%,var(--surface-2))"></i>`).join('');
 
   // framework coverage
-  const fwMap={};T.forEach((t,i)=>{(fwMap[t[4]]=fwMap[t[4]]||{t:0,d:0}).t++;if(isDone(i))fwMap[t[4]].d++;});
-  $('#rp-fw').innerHTML=FRAMEWORKS.map(fw=>{const d=fwMap[fw]||{t:0,d:0};const p=d.t?Math.round(d.d/d.t*100):0;
-    return `<div class="barrow"><div class="bm"><span class="bl">${esc(fw)}</span><span class="bc tnum">${d.d}/${d.t} · ${p}%</span></div><div class="bartrack"><div class="barfill" style="width:0;background:var(--accent)" data-w="${p}"></div></div></div>`;}).join('');
+  const fwMap=tally(t=>t[4]);
+  $('#rp-fw').innerHTML=FRAMEWORKS.map(fw=>{const d=fwMap[fw]||{t:0,d:0},p=pctOf(d.d,d.t);return barRowHTML(fw,p,d.d+'/'+d.t+' · '+p+'%');}).join('');
   animateBars('#rp-fw');
 }
 
@@ -343,7 +364,7 @@ function buildChoices(){
 function getChecked(group){return $$(`.choice[data-group="${group}"].on`).map(c=>c.dataset.val);}
 function setChecked(group,vals){$$(`.choice[data-group="${group}"]`).forEach(c=>c.classList.toggle('on',(vals||[]).includes(c.dataset.val)));}
 function loadProfile(){
-  const c=LS('kn_customer')||{};
+  const c=getCustomer();
   ['name','industry','size','region','contact','email','team','notes'].forEach(k=>{const el=$('#c-'+k);if(el&&c[k]!=null)el.value=c[k];});
   setChecked('fw',c.frameworks);setChecked('th',c.themes);setChecked('pri',c.priorities);setChecked('lvl',c.levels);
 }
@@ -351,7 +372,7 @@ function saveProfile(){
   const g=id=>$('#c-'+id).value;
   const c={name:g('name'),industry:g('industry'),size:g('size'),region:g('region'),contact:g('contact'),email:g('email'),team:g('team'),notes:g('notes'),
     frameworks:getChecked('fw'),priorities:getChecked('pri'),levels:getChecked('lvl'),themes:getChecked('th')};
-  SS('kn_customer',c);invalidateTeam();
+  SS('kn_customer',c);invalidateCustomer();
   const n=$('#saved-note');n.classList.add('show');setTimeout(()=>n.classList.remove('show'),2400);
   renderTasks();syncBadges();navigateTo('tasks');
 }
@@ -372,7 +393,7 @@ $$('.nav-link').forEach(l=>{
 $$('[data-goto]').forEach(b=>b.addEventListener('click',()=>navigateTo(b.dataset.goto)));
 document.addEventListener('click',e=>{const g=e.target.closest('[data-goto-task],[data-goto-tasks]');if(g)navigateTo('tasks');});
 function syncBadges(){
-  let critOpen=0,done=0;for(let i=0;i<T.length;i++){if(isDone(i))done++;else if(T[i][0]==='critical')critOpen++;}
+  const{critOpen}=progressOf();
   const b=$('#nav-crit-badge');if(critOpen>0){b.textContent=critOpen;b.style.display='flex';}else b.style.display='none';
 }
 
@@ -466,7 +487,7 @@ function parseRows(rows){
 
 // ════ PROFILE buttons ════
 $('#btn-save-profile').addEventListener('click',saveProfile);
-$('#btn-clear-profile').addEventListener('click',()=>{if(!confirm('Clear the company profile?'))return;localStorage.removeItem('kn_customer');invalidateTeam();loadProfile();renderTasks();syncBadges();});
+$('#btn-clear-profile').addEventListener('click',()=>{if(!confirm('Clear the company profile?'))return;localStorage.removeItem('kn_customer');invalidateCustomer();loadProfile();renderTasks();syncBadges();});
 $('#btn-print').addEventListener('click',()=>window.print());
 
 // ════ THEME / SETTINGS ════
